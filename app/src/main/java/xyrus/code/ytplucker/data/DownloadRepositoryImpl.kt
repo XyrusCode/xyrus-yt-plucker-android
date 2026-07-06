@@ -1,12 +1,12 @@
-package tech.acachi.ytplucker.data
+package xyrus.code.ytplucker.data
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import tech.acachi.ytplucker.domain.DownloadRepository
-import tech.acachi.ytplucker.domain.model.DownloadProgress
-import tech.acachi.ytplucker.domain.model.VideoMeta
+import xyrus.code.ytplucker.domain.DownloadRepository
+import xyrus.code.ytplucker.domain.model.DownloadProgress
+import xyrus.code.ytplucker.domain.model.VideoMeta
 
 /**
  * Process-wide singleton that bridges the foreground service and the UI. The service writes

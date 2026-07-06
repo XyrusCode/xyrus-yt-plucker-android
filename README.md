@@ -11,6 +11,21 @@ Downloads are powered by **[youtubedl-android](https://github.com/yausername/you
 Height-capped quality selections carry a `/b` fallback so limited-resolution sources (like short X
 clips) never hard-fail, and the source (YouTube / X) is surfaced after Analyze.
 
+## Features (v3)
+
+- **Download tab** — paste/analyze/download with live progress; self-healing yt-dlp updates.
+- **History tab** — lists everything you've downloaded (read from the device's media library); tap
+  a row to open it in your device's native player/viewer.
+- **Share target** — YT-Plucker appears in the YouTube / X share sheets. Sharing a video prefills
+  the URL and jumps to the Download tab, ready to go.
+- **Saved by type into the gallery** — finished files land in the public **Movies / Pictures /
+  Music** folders (under a `YT-Plucker` album) via MediaStore, so they show up in Gallery/Music
+  apps. Nothing is buffered in RAM — files stream to a private working dir then publish to the
+  gallery.
+- **Stable signing** — every build is signed with one committed key (identity
+  `xyrus.code.yt-plucker`), so updates install straight over the previous version. Package id:
+  `xyrus.code.ytplucker`.
+
 ## Architecture
 
 ```

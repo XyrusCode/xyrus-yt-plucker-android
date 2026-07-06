@@ -1,4 +1,4 @@
-package tech.acachi.ytplucker.service
+package xyrus.code.ytplucker.service
 
 import android.app.Notification
 import android.app.Service
@@ -16,12 +16,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import tech.acachi.ytplucker.R
-import tech.acachi.ytplucker.YtPluckerApp
-import tech.acachi.ytplucker.data.DownloadRepositoryImpl
-import tech.acachi.ytplucker.domain.model.DownloadProgress
-import tech.acachi.ytplucker.domain.model.JobStatus
-import tech.acachi.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.R
+import xyrus.code.ytplucker.YtPluckerApp
+import xyrus.code.ytplucker.data.DownloadRepositoryImpl
+import xyrus.code.ytplucker.data.MediaExporter
+import xyrus.code.ytplucker.domain.model.DownloadProgress
+import xyrus.code.ytplucker.domain.model.JobStatus
+import xyrus.code.ytplucker.domain.model.Quality
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -78,8 +79,11 @@ class DownloadService : Service() {
 
         val job = serviceScope.launch {
             var last = initial
+            // Download into a private working dir; publish the finished file to the public
+            // gallery afterwards. Keeps partials out of the user's Movies/Music while in flight.
+            val workDir = File(cacheDir, "ytwork/$jobId")
             try {
-                File(destDir).mkdirs()
+                workDir.mkdirs()
                 val onProgress: (Float, Long, String) -> Unit = { percent, etaSeconds, line ->
                     val speed = parseSpeedBytesPerSec(line)
                     last = last.copy(
@@ -93,7 +97,7 @@ class DownloadService : Service() {
                     updateNotification(jobId, last)
                 }
                 suspend fun runOnce() = repository.downloadManager.download(
-                    url = url, quality = quality, destDir = destDir, jobId = jobId,
+                    url = url, quality = quality, destDir = workDir.absolutePath, jobId = jobId,
                     onProgress = onProgress,
                 )
                 try {
@@ -106,6 +110,8 @@ class DownloadService : Service() {
                     repository.downloadManager.updateEngine(applicationContext)
                     runOnce()
                 }
+                // Publish finished media into the public gallery (Movies/Pictures/Music by type).
+                exportProduced(workDir)
                 repository.publish(last.copy(percent = 100f, status = JobStatus.COMPLETED))
             } catch (e: Exception) {
                 val cancelled = isCancellation(e)
@@ -116,10 +122,22 @@ class DownloadService : Service() {
                     ),
                 )
             } finally {
+                workDir.deleteRecursively()
                 onJobFinished(jobId, last)
             }
         }
         jobs[jobId] = job
+    }
+
+    /** Copy the finished media file(s) from the working dir into the public gallery by type. */
+    private fun exportProduced(workDir: File) {
+        val media = workDir.listFiles()?.filter {
+            it.isFile && it.length() > 0 &&
+                !it.name.endsWith(".part", true) &&
+                !it.name.endsWith(".ytdl", true) &&
+                !it.name.endsWith(".tmp", true)
+        }.orEmpty()
+        media.forEach { f -> runCatching { MediaExporter.export(this, f) } }
     }
 
     private fun cancelJob(jobId: String) {
@@ -239,8 +257,8 @@ class DownloadService : Service() {
         (getExternalFilesDir(android.os.Environment.DIRECTORY_MOVIES) ?: filesDir).absolutePath
 
     companion object {
-        const val ACTION_START = "tech.acachi.ytplucker.action.START"
-        const val ACTION_STOP = "tech.acachi.ytplucker.action.STOP"
+        const val ACTION_START = "xyrus.code.ytplucker.action.START"
+        const val ACTION_STOP = "xyrus.code.ytplucker.action.STOP"
         const val EXTRA_JOB_ID = "jobId"
         const val EXTRA_URL = "url"
         const val EXTRA_QUALITY = "quality"

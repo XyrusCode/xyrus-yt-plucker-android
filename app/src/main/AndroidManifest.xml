@@ -15,6 +15,12 @@
     <!-- Hold a partial wake lock so the OS does not suspend the transfer with the screen off -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Pre-scoped-storage: writing finished media into the public Movies/Pictures/Music dirs.
+         On API 29+ we use MediaStore (RELATIVE_PATH), which needs no permission. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <application
         android:name=".YtPluckerApp"
         android:allowBackup="true"
@@ -28,10 +34,17 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.YtPlucker">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Appear in the system share sheet: YouTube / X "Share" send a text/plain URL. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
 

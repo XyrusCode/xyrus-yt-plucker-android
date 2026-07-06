@@ -1,12 +1,12 @@
-package tech.acachi.ytplucker.data
+package xyrus.code.ytplucker.data
 
 import android.content.Context
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import tech.acachi.ytplucker.domain.model.Quality
-import tech.acachi.ytplucker.domain.model.VideoMeta
+import xyrus.code.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.domain.model.VideoMeta
 
 /**
  * Thin wrapper over youtubedl-android (yt-dlp + ffmpeg). This is the piece that "pipes the

@@ -1,4 +1,4 @@
-package tech.acachi.ytplucker.ui.theme
+package xyrus.code.ytplucker.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

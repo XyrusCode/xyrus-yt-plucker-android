@@ -1,9 +1,9 @@
-package tech.acachi.ytplucker.service
+package xyrus.code.ytplucker.service
 
 /**
  * Parsers for yt-dlp's `--newline` stdout and small display formatters. Kept in the service
  * package because the raw-line parsing is a service concern; the UI formats from the typed
- * [tech.acachi.ytplucker.domain.model.DownloadProgress] instead.
+ * [xyrus.code.ytplucker.domain.model.DownloadProgress] instead.
  *
  * A yt-dlp download line looks like:
  *   [download]  45.2% of 12.34MiB at 2.50MiB/s ETA 00:03

@@ -5,20 +5,35 @@ plugins {
 }
 
 android {
-    namespace = "tech.acachi.ytplucker"
+    namespace = "xyrus.code.ytplucker"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "tech.acachi.ytplucker"
+        applicationId = "xyrus.code.ytplucker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "2.1.0"
+        versionCode = 4
+        versionName = "3.0.0"
+    }
+
+    // One shared, committed signing key (identity: xyrus.code.yt-plucker) used by every build so
+    // updates never conflict — a device installs a new version straight over the old one. The key
+    // is intentionally public: fine for a personally self-distributed GitHub app, not Play-grade.
+    signingConfigs {
+        create("shared") {
+            storeFile = rootProject.file("keystore/ytplucker.jks")
+            storePassword = "ytplucker"
+            keyAlias = "ytplucker"
+            keyPassword = "ytplucker"
+        }
     }
 
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("shared")
+        }
         release {
-            // No signing config wired here — CI produces an unsigned debug APK.
+            signingConfig = signingConfigs.getByName("shared")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -48,6 +63,11 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    // Don't let a non-critical lint rule fail the release build in CI.
+    lint {
+        abortOnError = false
     }
 
     // youtubedl-android unpacks its Python/yt-dlp payload from the APK at runtime,

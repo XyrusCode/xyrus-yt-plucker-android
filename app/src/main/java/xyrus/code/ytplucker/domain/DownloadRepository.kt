@@ -1,8 +1,8 @@
-package tech.acachi.ytplucker.domain
+package xyrus.code.ytplucker.domain
 
 import kotlinx.coroutines.flow.StateFlow
-import tech.acachi.ytplucker.domain.model.DownloadProgress
-import tech.acachi.ytplucker.domain.model.VideoMeta
+import xyrus.code.ytplucker.domain.model.DownloadProgress
+import xyrus.code.ytplucker.domain.model.VideoMeta
 
 /**
  * The single reactive channel between the download engine / foreground service and the UI.

@@ -1,4 +1,4 @@
-package tech.acachi.ytplucker.ui
+package xyrus.code.ytplucker.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,13 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import tech.acachi.ytplucker.domain.model.DownloadProgress
-import tech.acachi.ytplucker.domain.model.JobStatus
-import tech.acachi.ytplucker.domain.model.Quality
-import tech.acachi.ytplucker.service.formatSpeed
-import tech.acachi.ytplucker.ui.theme.Accent
-import tech.acachi.ytplucker.ui.theme.Ok
-import tech.acachi.ytplucker.ui.theme.Warn
+import xyrus.code.ytplucker.domain.model.DownloadProgress
+import xyrus.code.ytplucker.domain.model.JobStatus
+import xyrus.code.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.service.formatSpeed
+import xyrus.code.ytplucker.ui.theme.Accent
+import xyrus.code.ytplucker.ui.theme.Ok
+import xyrus.code.ytplucker.ui.theme.Warn
 
 @Composable
 fun DownloadScreen(viewModel: DownloadViewModel = viewModel()) {
@@ -57,9 +56,6 @@ fun DownloadScreen(viewModel: DownloadViewModel = viewModel()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // Respect status/navigation/cutout insets so the header isn't drawn under the
-                // system bars (the app is edge-to-edge via enableEdgeToEdge()).
-                .safeDrawingPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -172,7 +168,7 @@ private fun QualityPicker(
 }
 
 @Composable
-private fun MetaCard(meta: tech.acachi.ytplucker.domain.model.VideoMeta) {
+private fun MetaCard(meta: xyrus.code.ytplucker.domain.model.VideoMeta) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (meta.thumbnailUrl != null) {

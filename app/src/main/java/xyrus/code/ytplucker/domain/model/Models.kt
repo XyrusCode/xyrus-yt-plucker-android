@@ -1,4 +1,4 @@
-package tech.acachi.ytplucker.domain.model
+package xyrus.code.ytplucker.domain.model
 
 /**
  * Quality options — mirror the desktop yt-grab dropdown 1:1. Each maps to the exact
@@ -45,6 +45,19 @@ data class VideoMeta(
 
 /** Terminal + in-flight states for a single download job. */
 enum class JobStatus { RUNNING, COMPLETED, FAILED, CANCELLED }
+
+/** A file this app has downloaded, as seen in MediaStore (backing the History tab). */
+data class DownloadedFile(
+    val uri: android.net.Uri,
+    val name: String,
+    val mime: String,
+    val sizeBytes: Long,
+    val dateAddedSec: Long,
+) {
+    val isVideo get() = mime.startsWith("video")
+    val isAudio get() = mime.startsWith("audio")
+    val isImage get() = mime.startsWith("image")
+}
 
 /**
  * A snapshot of a download's progress. Immutable so it is safe to publish through a

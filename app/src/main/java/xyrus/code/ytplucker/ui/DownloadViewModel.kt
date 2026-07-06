@@ -1,4 +1,4 @@
-package tech.acachi.ytplucker.ui
+package xyrus.code.ytplucker.ui
 
 import android.app.Application
 import android.content.Intent
@@ -14,12 +14,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import tech.acachi.ytplucker.data.DownloadRepositoryImpl
-import tech.acachi.ytplucker.domain.DownloadRepository
-import tech.acachi.ytplucker.domain.model.DownloadProgress
-import tech.acachi.ytplucker.domain.model.Quality
-import tech.acachi.ytplucker.domain.model.VideoMeta
-import tech.acachi.ytplucker.service.DownloadService
+import xyrus.code.ytplucker.data.DownloadRepositoryImpl
+import xyrus.code.ytplucker.domain.DownloadRepository
+import xyrus.code.ytplucker.domain.model.DownloadProgress
+import xyrus.code.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.domain.model.VideoMeta
+import xyrus.code.ytplucker.service.DownloadService
 
 /** Immutable, @Stable-friendly UI state — one object drives the whole screen. */
 data class UiState(

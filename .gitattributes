@@ -3,5 +3,7 @@
 gradlew text eol=lf
 gradlew.bat text eol=crlf
 
-# Treat the wrapper jar as binary (never line-ending munged).
+# Treat binaries as binary (never line-ending munged) — a corrupted keystore breaks signing.
 *.jar binary
+*.jks binary
+*.keystore binary
