@@ -12,8 +12,8 @@ android {
         applicationId = "xyrus.code.ytplucker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 4
-        versionName = "3.0.0"
+        versionCode = 5
+        versionName = "3.0.1"
     }
 
     // One shared, committed signing key (identity: xyrus.code.yt-plucker) used by every build so
@@ -102,5 +102,4 @@ dependencies {
 
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)
-    implementation(libs.youtubedl.android.aria2c)
 }

@@ -21,7 +21,7 @@ class DownloadManager {
 
     /** Fetch metadata only (yt-dlp `-J` under the hood). Safe to call on any thread; hops to IO. */
     suspend fun probe(url: String): VideoMeta = withContext(Dispatchers.IO) {
-        val info = YoutubeDL.getInstance().getInfo(url)
+        val info = YoutubeDL.getInfo(url)
         val heights = info.formats
             ?.mapNotNull { it.height.takeIf { h -> h > 0 } }
             ?.distinct()
@@ -68,13 +68,13 @@ class DownloadManager {
             applyFormat(quality)
         }
         // ffmpeg (from the youtubedl-android ffmpeg module) is auto-discovered for merging.
-        YoutubeDL.getInstance().execute(request, jobId) { progress, etaInSeconds, line ->
+        YoutubeDL.execute(request, jobId) { progress, etaInSeconds, line ->
             onProgress(progress, etaInSeconds, line)
         }
     }
 
     /** Kill the yt-dlp (+ffmpeg) process tree for a job. */
-    fun cancel(jobId: String): Boolean = YoutubeDL.getInstance().destroyProcessById(jobId)
+    fun cancel(jobId: String): Boolean = YoutubeDL.destroyProcessById(jobId)
 
     /**
      * Pull the latest yt-dlp binary (from yt-dlp's own GitHub releases) and persist it.
@@ -82,7 +82,7 @@ class DownloadManager {
      * Best-effort — returns false if the update could not complete (e.g. offline).
      */
     suspend fun updateEngine(context: Context): Boolean = withContext(Dispatchers.IO) {
-        runCatching { YoutubeDL.getInstance().updateYoutubeDL(context) }.isSuccess
+        runCatching { YoutubeDL.updateYoutubeDL(context) }.isSuccess
     }
 
     private fun YoutubeDLRequest.applyFormat(quality: Quality) {

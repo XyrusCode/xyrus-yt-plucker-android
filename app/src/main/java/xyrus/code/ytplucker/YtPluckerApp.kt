@@ -22,12 +22,12 @@ class YtPluckerApp : Application() {
         // Do it off the main thread so app startup stays snappy.
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                YoutubeDL.getInstance().init(this@YtPluckerApp)
-                FFmpeg.getInstance().init(this@YtPluckerApp)
+                YoutubeDL.init(this@YtPluckerApp)
+                FFmpeg.init(this@YtPluckerApp)
                 // The pinned wrapper (0.14.0) ships an old yt-dlp binary; refresh it so extraction
                 // works against current sites. Best-effort — a failure here (e.g. offline) just
                 // leaves the bundled binary in place.
-                runCatching { YoutubeDL.getInstance().updateYoutubeDL(this@YtPluckerApp) }
+                runCatching { YoutubeDL.updateYoutubeDL(this@YtPluckerApp) }
                     .onFailure { Log.w(TAG, "yt-dlp self-update skipped", it) }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize yt-dlp/ffmpeg", e)
