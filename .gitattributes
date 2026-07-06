@@ -1,0 +1,7 @@
+# Keep shell scripts LF so they run on Linux CI runners.
+*.sh text eol=lf
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Treat the wrapper jar as binary (never line-ending munged).
+*.jar binary

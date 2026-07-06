@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. The Compose UI supplies its own MaterialTheme; this exists so
+         the manifest has a valid launch theme with the dark background baked in (no white flash). -->
+    <style name="Theme.YtPlucker" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#0F1115</item>
+        <item name="android:navigationBarColor">#0F1115</item>
+        <item name="android:windowBackground">#0F1115</item>
+    </style>
+</resources>
