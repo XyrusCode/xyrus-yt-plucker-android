@@ -65,7 +65,7 @@ fun DownloadScreen(viewModel: DownloadViewModel = viewModel()) {
             OutlinedTextField(
                 value = state.url,
                 onValueChange = viewModel::onUrlChange,
-                label = { Text("Video or playlist URL") },
+                label = { Text("YouTube or X (Twitter) video / playlist URL") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -83,13 +83,17 @@ fun DownloadScreen(viewModel: DownloadViewModel = viewModel()) {
                 ) { Text("Download") }
             }
 
-            QualityPicker(state.quality, viewModel::onQualityChange)
+            QualityPicker(
+                selected = state.quality,
+                availableHeights = state.meta?.availableHeights ?: emptyList(),
+                onSelect = viewModel::onQualityChange,
+            )
 
             state.error?.let {
                 Text(it, color = Warn, style = MaterialTheme.typography.bodySmall)
             }
 
-            state.meta?.let { MetaCard(it.title, it.thumbnailUrl, it.durationSeconds) }
+            state.meta?.let { MetaCard(it) }
 
             if (state.jobs.isNotEmpty()) {
                 Text("Downloads", fontWeight = FontWeight.SemiBold)
@@ -114,7 +118,7 @@ private fun Header() {
         Column {
             Text("YT-Plucker", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
-                "videos & playlists, straight to disk",
+                "pluck videos from YouTube & X, straight to disk",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -124,8 +128,22 @@ private fun Header() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun QualityPicker(selected: Quality, onSelect: (Quality) -> Unit) {
+private fun QualityPicker(
+    selected: Quality,
+    availableHeights: List<Int>,
+    onSelect: (Quality) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
+    // After an Analyze, only offer resolution tiers the source actually has (video only).
+    // "best" and audio-only options are always available; the `/b` format fallback keeps
+    // any choice safe even when a source's resolutions are limited (e.g. short X clips).
+    val maxH = availableHeights.maxOrNull()
+    val minH = availableHeights.minOrNull()
+    fun isEnabled(q: Quality): Boolean {
+        val h = q.id.toIntOrNull() ?: return true // best / mp3 / m4a
+        if (maxH == null) return true              // not analyzed yet
+        return h in minH!!..maxH
+    }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
             value = selected.label,
@@ -141,6 +159,7 @@ private fun QualityPicker(selected: Quality, onSelect: (Quality) -> Unit) {
             Quality.entries.forEach { q ->
                 DropdownMenuItem(
                     text = { Text(q.label) },
+                    enabled = isEnabled(q),
                     onClick = { onSelect(q); expanded = false },
                 )
             }
@@ -149,12 +168,12 @@ private fun QualityPicker(selected: Quality, onSelect: (Quality) -> Unit) {
 }
 
 @Composable
-private fun MetaCard(title: String, thumbnailUrl: String?, durationSeconds: Int?) {
+private fun MetaCard(meta: tech.acachi.ytplucker.domain.model.VideoMeta) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (thumbnailUrl != null) {
+            if (meta.thumbnailUrl != null) {
                 AsyncImage(
-                    model = thumbnailUrl,
+                    model = meta.thumbnailUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -162,8 +181,15 @@ private fun MetaCard(title: String, thumbnailUrl: String?, durationSeconds: Int?
                         .clip(RoundedCornerShape(8.dp)),
                 )
             }
-            Text(title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            durationSeconds?.let { Text(formatDuration(it), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            Text(meta.title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // "YouTube · 3:41" / "X (Twitter) · 0:22" — source label joined with duration.
+            val subtitle = listOfNotNull(
+                meta.prettySource,
+                meta.durationSeconds?.let { formatDuration(it) },
+            ).joinToString(" · ")
+            if (subtitle.isNotEmpty()) {
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }

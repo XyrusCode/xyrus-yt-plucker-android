@@ -21,11 +21,20 @@ class DownloadManager {
     /** Fetch metadata only (yt-dlp `-J` under the hood). Safe to call on any thread; hops to IO. */
     suspend fun probe(url: String): VideoMeta = withContext(Dispatchers.IO) {
         val info = YoutubeDL.getInstance().getInfo(url)
+        val heights = info.formats
+            ?.mapNotNull { it.height.takeIf { h -> h > 0 } }
+            ?.distinct()
+            ?.sorted()
+            ?: emptyList()
         VideoMeta(
             title = info.title ?: url,
             thumbnailUrl = info.thumbnail,
             durationSeconds = info.duration.takeIf { it > 0 },
             uploader = info.uploader,
+            // yt-dlp extractor, e.g. "Youtube", "Twitter" — surfaced so the UI can label
+            // the source (YouTube / X). Extraction itself is native to yt-dlp for both.
+            source = info.extractorKey?.takeIf { it.isNotBlank() } ?: info.extractor,
+            availableHeights = heights,
         )
     }
 
@@ -74,7 +83,10 @@ class DownloadManager {
             }
             Quality.P2160, Quality.P1440, Quality.P1080, Quality.P720, Quality.P480 -> {
                 val h = quality.id
-                addOption("-f", "bv*[height<=$h]+ba/b[height<=$h]")
+                // Trailing `/b` falls back to the best available stream when nothing sits at or
+                // below the requested height (e.g. a short X clip whose only stream is above the
+                // cap), so a download never hard-fails on limited-resolution sources.
+                addOption("-f", "bv*[height<=$h]+ba/b[height<=$h]/b")
                 addOption("--merge-output-format", "mp4")
             }
             Quality.MP3 -> {

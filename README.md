@@ -1,13 +1,15 @@
 # YT-Plucker (Android)
 
-Native Android port of the desktop **yt-grab** app — *videos & playlists, straight to disk*.
-Built with **Kotlin + Jetpack Compose**, Clean Architecture (ViewModel + Coroutines/Flow), and a
-**foreground service** so downloads keep running at full speed when the app is minimized or the
-screen is off.
+Native Android port of the desktop **Xyrus' YT Plucker** app — *pluck videos from YouTube & X,
+straight to disk*. Built with **Kotlin + Jetpack Compose**, Clean Architecture (ViewModel +
+Coroutines/Flow), and a **foreground service** so downloads keep running at full speed when the app
+is minimized or the screen is off.
 
 Downloads are powered by **[youtubedl-android](https://github.com/yausername/youtubedl-android)**
-(bundled `yt-dlp` + `ffmpeg`), so it supports YouTube and ~1800 other sites, 4K, playlists, and
-audio extraction — the same engine and format logic as the desktop app.
+(bundled `yt-dlp` + `ffmpeg`), so it supports **YouTube and X (Twitter)** — plus ~1800 other sites,
+4K, playlists, and audio extraction — with the same engine and format logic as the desktop app.
+Height-capped quality selections carry a `/b` fallback so limited-resolution sources (like short X
+clips) never hard-fail, and the source (YouTube / X) is surfaced after Analyze.
 
 ## Architecture
 

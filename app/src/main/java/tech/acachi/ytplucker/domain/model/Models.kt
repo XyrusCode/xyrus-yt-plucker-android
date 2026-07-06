@@ -27,7 +27,21 @@ data class VideoMeta(
     val thumbnailUrl: String?,
     val durationSeconds: Int?,
     val uploader: String?,
-)
+    val source: String? = null,          // yt-dlp extractor key, e.g. "Youtube", "Twitter"
+    val availableHeights: List<Int> = emptyList(),
+) {
+    /** Human label for the source: "YouTube", "X (Twitter)", or the raw extractor name. */
+    val prettySource: String?
+        get() {
+            val s = source?.lowercase() ?: return null
+            return when {
+                s.contains("youtube") -> "YouTube"
+                s.contains("twitter") || s == "x" -> "X (Twitter)"
+                s.isBlank() -> null
+                else -> source
+            }
+        }
+}
 
 /** Terminal + in-flight states for a single download job. */
 enum class JobStatus { RUNNING, COMPLETED, FAILED, CANCELLED }
