@@ -5,32 +5,26 @@ import android.graphics.Bitmap
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +51,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import xyrus.code.ytplucker.R
 import xyrus.code.ytplucker.domain.model.Quality
 import xyrus.code.ytplucker.ui.theme.Accent
+import xyrus.code.ytplucker.ui.theme.BorderCol
+import xyrus.code.ytplucker.ui.theme.Panel
 
 private data class Platform(val name: String, val url: String, val color: Color)
 
@@ -96,11 +92,8 @@ fun BrowserScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top bar
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 2.dp,
-            ) {
+            // Top bar — clearly visible against the background
+            Surface(color = Panel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -111,7 +104,7 @@ fun BrowserScreen(
                     OutlinedTextField(
                         value = urlInput,
                         onValueChange = { urlInput = it },
-                        placeholder = { Text("Paste URL or tap a platform") },
+                        placeholder = { Text("Paste URL or search…") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
                     )
@@ -126,14 +119,29 @@ fun BrowserScreen(
                     }
                 }
             }
+            HorizontalDivider(color = BorderCol)
 
-            // Platform shortcuts
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+            // Platform buttons — tap to jump straight to that site
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(platforms) { platform ->
-                    PlatformCard(platform) { viewModel.loadUrl(platform.url) }
+                platforms.forEach { p ->
+                    Button(
+                        onClick = { viewModel.loadUrl(p.url) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = p.color.copy(alpha = 0.2f)),
+                    ) {
+                        Text(
+                            p.name,
+                            fontWeight = FontWeight.Bold,
+                            color = p.color,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                        )
+                    }
                 }
             }
 
@@ -204,31 +212,6 @@ fun BrowserScreen(
                     showDownloadSheet = false
                     viewModel.triggerDownload(currentUrl, selectedQuality)
                 },
-            )
-        }
-    }
-}
-
-@Composable
-private fun PlatformCard(platform: Platform, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(130.dp)
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = platform.color.copy(alpha = 0.15f),
-        ),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                platform.name,
-                fontWeight = FontWeight.Bold,
-                color = platform.color,
-                style = MaterialTheme.typography.titleMedium,
             )
         }
     }
