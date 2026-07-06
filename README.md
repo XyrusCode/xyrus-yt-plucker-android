@@ -51,15 +51,15 @@ First launch unpacks the bundled Python/yt-dlp/ffmpeg payload (one-time, a few s
 ## CI
 
 `.github/workflows/android-build.yml` builds an **unsigned debug APK** on every push/PR and uploads
-it as a workflow artifact. Pushing a `v*` tag additionally attaches the APKs to a GitHub Release.
+it as a workflow artifact. Pushing a `v*` tag additionally attaches the per-ABI APKs to a GitHub
+Release.
 
-This folder isn't wired to a remote yet. To publish and trigger the Action:
+This is the standalone Android repo (companion to the desktop app at
+[`xyrus-yt-plucker`](https://github.com/XyrusCode/xyrus-yt-plucker)). To cut a release:
 
 ```bash
-git init && git add . && git commit -m "Initial commit"
-gh repo create Xyrus-YT-Plucker --private --source=. --remote=origin --push
-# then, to cut a release:
 git tag v0.1.0 && git push origin v0.1.0
+# → builds the APKs and attaches them to a GitHub Release for that tag.
 ```
 
 ## Notes & limitations
