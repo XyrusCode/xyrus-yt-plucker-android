@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import xyrus.code.ytplucker.ui.BrowserScreen
+import xyrus.code.ytplucker.ui.BrowserViewModel
 import xyrus.code.ytplucker.ui.DownloadScreen
 import xyrus.code.ytplucker.ui.DownloadViewModel
 import xyrus.code.ytplucker.ui.HistoryScreen
@@ -87,23 +89,24 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class Tab(val label: String, val icon: Int) {
+    BROWSER("Browser", R.drawable.ic_browser),
     DOWNLOAD("Download", R.drawable.ic_download),
     HISTORY("History", R.drawable.ic_history),
 }
 
 @Composable
 private fun AppRoot(sharedUrl: MutableState<String?>) {
-    // Both view models are activity-scoped, so DownloadScreen's own viewModel() resolves the same
-    // instance we prefill here.
+    // All three view models are activity-scoped so they survive tab switches.
+    val browserVm: BrowserViewModel = viewModel()
     val downloadVm: DownloadViewModel = viewModel()
     val historyVm: HistoryViewModel = viewModel()
-    var tab by remember { mutableStateOf(Tab.DOWNLOAD) }
+    var tab by remember { mutableStateOf(Tab.BROWSER) }
 
-    // A shared URL prefills the input and jumps to the Download tab.
+    // A shared URL loads in the browser and switches to that tab.
     LaunchedEffect(sharedUrl.value) {
         sharedUrl.value?.let {
-            downloadVm.onUrlChange(it)
-            tab = Tab.DOWNLOAD
+            browserVm.loadUrl(it)
+            tab = Tab.BROWSER
             sharedUrl.value = null
         }
     }
@@ -124,10 +127,12 @@ private fun AppRoot(sharedUrl: MutableState<String?>) {
             }
         },
     ) { inner ->
-        // Scaffold supplies system-bar + bottom-bar insets here (edge-to-edge), so screens don't
-        // apply their own window insets.
         Box(modifier = Modifier.padding(inner)) {
             when (tab) {
+                Tab.BROWSER -> BrowserScreen(
+                    viewModel = browserVm,
+                    onNavigateToDownloads = { tab = Tab.HISTORY },
+                )
                 Tab.DOWNLOAD -> DownloadScreen(viewModel = downloadVm)
                 Tab.HISTORY -> HistoryScreen(viewModel = historyVm)
             }

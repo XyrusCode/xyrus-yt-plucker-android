@@ -12,8 +12,8 @@ android {
         applicationId = "xyrus.code.ytplucker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5
-        versionName = "3.0.1"
+        versionCode = 6
+        versionName = "3.1.0"
     }
 
     // One shared, committed signing key (identity: xyrus.code.yt-plucker) used by every build so
