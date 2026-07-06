@@ -12,12 +12,12 @@ import java.io.File
 
 /**
  * Publishes a finished download into the device's public media collections so it shows up in the
- * gallery / music player — routed by type:
- *   video/* → Movies/YT-Plucker,  image/* → Pictures/YT-Plucker,  audio/* → Music/YT-Plucker.
+ * gallery / music player — routed by type: video to Movies, image to Pictures, audio to Music,
+ * each under a "YT-Plucker" sub-folder.
  *
  * On API 29+ this uses MediaStore's RELATIVE_PATH (scoped storage, no permission needed). On
- * API ≤ 28 it writes to the public directory directly (requires WRITE_EXTERNAL_STORAGE) and asks
- * the media scanner to index it.
+ * API 28 and below it writes to the public directory directly (requires WRITE_EXTERNAL_STORAGE)
+ * and asks the media scanner to index it.
  */
 object MediaExporter {
 
