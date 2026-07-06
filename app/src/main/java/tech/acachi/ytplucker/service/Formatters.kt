@@ -39,6 +39,25 @@ fun formatSpeed(bytesPerSec: Float): String {
     else String.format("%.0f KB/s", bytesPerSec / 1024f)
 }
 
+/**
+ * Heuristic: does this yt-dlp error look like the bundled binary has gone stale against a site's
+ * changes (as opposed to a genuine bad URL / network error)? These are the signatures that a
+ * `updateYoutubeDL()` + retry typically resolves.
+ */
+fun isStaleEngineError(message: String?): Boolean {
+    val m = message?.lowercase() ?: return false
+    return listOf(
+        "precondition check failed",
+        "unable to extract",
+        "http error 400",
+        "confirm you are on the latest version",
+        "nsig extraction failed",
+        "unable to download api page",
+        "sign in to confirm",
+        "please report this issue",
+    ).any { m.contains(it) }
+}
+
 private fun unitMultiplier(unit: String): Float = when (unit.uppercase().replace("I", "")) {
     "GB" -> 1024f * 1024f * 1024f
     "MB" -> 1024f * 1024f

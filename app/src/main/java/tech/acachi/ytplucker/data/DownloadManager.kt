@@ -1,5 +1,6 @@
 package tech.acachi.ytplucker.data
 
+import android.content.Context
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
@@ -74,6 +75,15 @@ class DownloadManager {
 
     /** Kill the yt-dlp (+ffmpeg) process tree for a job. */
     fun cancel(jobId: String): Boolean = YoutubeDL.getInstance().destroyProcessById(jobId)
+
+    /**
+     * Pull the latest yt-dlp binary (from yt-dlp's own GitHub releases) and persist it.
+     * Fixes extraction breakage when the bundled binary has gone stale against site changes.
+     * Best-effort — returns false if the update could not complete (e.g. offline).
+     */
+    suspend fun updateEngine(context: Context): Boolean = withContext(Dispatchers.IO) {
+        runCatching { YoutubeDL.getInstance().updateYoutubeDL(context) }.isSuccess
+    }
 
     private fun YoutubeDLRequest.applyFormat(quality: Quality) {
         when (quality) {

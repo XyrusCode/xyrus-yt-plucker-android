@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,6 +57,9 @@ fun DownloadScreen(viewModel: DownloadViewModel = viewModel()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                // Respect status/navigation/cutout insets so the header isn't drawn under the
+                // system bars (the app is edge-to-edge via enableEdgeToEdge()).
+                .safeDrawingPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

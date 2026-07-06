@@ -80,12 +80,7 @@ class DownloadService : Service() {
             var last = initial
             try {
                 File(destDir).mkdirs()
-                repository.downloadManager.download(
-                    url = url,
-                    quality = quality,
-                    destDir = destDir,
-                    jobId = jobId,
-                ) { percent, etaSeconds, line ->
+                val onProgress: (Float, Long, String) -> Unit = { percent, etaSeconds, line ->
                     val speed = parseSpeedBytesPerSec(line)
                     last = last.copy(
                         title = parseTitle(line) ?: last.title,
@@ -97,10 +92,23 @@ class DownloadService : Service() {
                     repository.publish(last)
                     updateNotification(jobId, last)
                 }
+                suspend fun runOnce() = repository.downloadManager.download(
+                    url = url, quality = quality, destDir = destDir, jobId = jobId,
+                    onProgress = onProgress,
+                )
+                try {
+                    runOnce()
+                } catch (e: Exception) {
+                    // If extraction failed because the bundled yt-dlp has gone stale against a
+                    // site change, pull the latest binary and retry once — self-healing.
+                    if (isCancellation(e) || !isStaleEngineError(e.message)) throw e
+                    notifyUpdating(jobId, last)
+                    repository.downloadManager.updateEngine(applicationContext)
+                    runOnce()
+                }
                 repository.publish(last.copy(percent = 100f, status = JobStatus.COMPLETED))
             } catch (e: Exception) {
-                val cancelled = e is InterruptedException ||
-                    e.message?.contains("cancel", ignoreCase = true) == true
+                val cancelled = isCancellation(e)
                 repository.publish(
                     last.copy(
                         status = if (cancelled) JobStatus.CANCELLED else JobStatus.FAILED,
@@ -150,16 +158,37 @@ class DownloadService : Service() {
     }
 
     private fun updateNotification(jobId: String, p: DownloadProgress) {
-        // Throttle: only push a notification update on whole-percent changes to avoid churn.
-        val nm = NotificationManagerCompat.from(this)
-        if (androidx.core.app.ActivityCompat.checkSelfPermission(
-                this, android.Manifest.permission.POST_NOTIFICATIONS,
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-        ) {
-            nm.notify(jobId.hashCode(), buildNotification(jobId, p))
+        if (hasNotifPermission()) {
+            NotificationManagerCompat.from(this).notify(jobId.hashCode(), buildNotification(jobId, p))
         }
     }
+
+    /** Show an indeterminate "Updating downloader…" notification while yt-dlp self-updates. */
+    private fun notifyUpdating(jobId: String, p: DownloadProgress) {
+        repository.publish(p.copy(percent = 0f, speedBytesPerSec = -1f, etaSeconds = -1, status = JobStatus.RUNNING))
+        if (!hasNotifPermission()) return
+        val notif = NotificationCompat.Builder(this, YtPluckerApp.CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_download)
+            .setContentTitle(p.title)
+            .setContentText(getString(R.string.updating_engine))
+            .setProgress(0, 0, true)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+        NotificationManagerCompat.from(this).notify(jobId.hashCode(), notif)
+    }
+
+    private fun hasNotifPermission(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            androidx.core.app.ActivityCompat.checkSelfPermission(
+                this, android.Manifest.permission.POST_NOTIFICATIONS,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    private fun isCancellation(e: Throwable): Boolean =
+        e is kotlinx.coroutines.CancellationException ||
+            e is InterruptedException ||
+            e.message?.contains("cancel", ignoreCase = true) == true
 
     private fun buildNotification(jobId: String, p: DownloadProgress): Notification {
         val pct = p.percent.toInt()
