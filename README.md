@@ -14,11 +14,11 @@ clips) never hard-fail, and the source (YouTube / X) is surfaced after Analyze.
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/1-browser.jpg" alt="Built-in browser on YouTube with one-tap download" width="30%">
-  &nbsp;
-  <img src="docs/screenshots/2-download-dialog.jpg" alt="Download dialog with quality selection" width="30%">
-  &nbsp;
-  <img src="docs/screenshots/3-downloads.jpg" alt="Downloads tab with live progress" width="30%">
+  <img src="https://raw.githubusercontent.com/XyrusCode/xyrus-yt-plucker-android/main/docs/screenshots/1-browser.jpg" alt="Built-in browser on YouTube with one-tap download" width="240">
+  &nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/XyrusCode/xyrus-yt-plucker-android/main/docs/screenshots/2-download-dialog.jpg" alt="Download dialog with quality selection" width="240">
+  &nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/XyrusCode/xyrus-yt-plucker-android/main/docs/screenshots/3-downloads.jpg" alt="Downloads tab with live progress" width="240">
 </p>
 
 <p align="center">
