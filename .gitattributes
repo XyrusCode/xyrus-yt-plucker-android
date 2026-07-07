@@ -7,3 +7,6 @@ gradlew.bat text eol=crlf
 *.jar binary
 *.jks binary
 *.keystore binary
+*.png binary
+*.jpg binary
+*.jpeg binary
