@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,14 +46,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import xyrus.code.ytplucker.R
 import xyrus.code.ytplucker.domain.model.Quality
 import xyrus.code.ytplucker.ui.theme.Accent
+import xyrus.code.ytplucker.ui.theme.Bg
 import xyrus.code.ytplucker.ui.theme.BorderCol
 import xyrus.code.ytplucker.ui.theme.Panel
+import xyrus.code.ytplucker.ui.theme.TextDim
 
 private data class Platform(val name: String, val url: String, val color: Color)
 
@@ -145,35 +149,43 @@ fun BrowserScreen(
                 }
             }
 
-            // WebView
-            AndroidView(
-                factory = { context ->
-                    WebView(context).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                        )
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.loadWithOverviewMode = true
-                        settings.useWideViewPort = true
-                        setBackgroundColor(android.graphics.Color.parseColor("#0F1115"))
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageStarted(view: WebView?, urlStr: String?, favicon: Bitmap?) {
-                                urlStr?.let { viewModel.onPageNavigated(it) }
-                            }
-
-                            override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
-                                url?.let { viewModel.onPageNavigated(it) }
-                            }
-                        }
-                        webViewRef.value = this
-                    }
-                },
+            // WebView area — a landing overlay covers the blank WebView until a site is opened,
+            // so launch is never an empty screen and the user can jump to YouTube / X.
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-            )
+            ) {
+                AndroidView(
+                    factory = { context ->
+                        WebView(context).apply {
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            )
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.loadWithOverviewMode = true
+                            settings.useWideViewPort = true
+                            setBackgroundColor(android.graphics.Color.parseColor("#0F1115"))
+                            webViewClient = object : WebViewClient() {
+                                override fun onPageStarted(view: WebView?, urlStr: String?, favicon: Bitmap?) {
+                                    urlStr?.let { viewModel.onPageNavigated(it) }
+                                }
+
+                                override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                                    url?.let { viewModel.onPageNavigated(it) }
+                                }
+                            }
+                            webViewRef.value = this
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                )
+                if (currentUrl.isEmpty()) {
+                    BrowserLanding(onPick = { viewModel.loadUrl(it) })
+                }
+            }
         }
 
         // FAB — visible only when on a video page
@@ -213,6 +225,45 @@ fun BrowserScreen(
                     viewModel.triggerDownload(currentUrl, selectedQuality)
                 },
             )
+        }
+    }
+}
+
+/** Empty-state shown over the WebView on launch: big cards to jump straight to YouTube / X. */
+@Composable
+private fun BrowserLanding(onPick: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Bg)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(Modifier.height(16.dp))
+        Text("Where to?", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            "Open a site, browse to a video, then tap the download button that appears.",
+            color = TextDim,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        platforms.forEach { p ->
+            Button(
+                onClick = { onPick(p.url) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(66.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = p.color.copy(alpha = 0.18f)),
+            ) {
+                Text(
+                    "Open ${p.name}",
+                    fontWeight = FontWeight.Bold,
+                    color = p.color,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
     }
 }

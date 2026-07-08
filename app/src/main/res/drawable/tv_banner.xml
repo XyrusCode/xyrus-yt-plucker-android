@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Dark background -->
+    <path
+        android:fillColor="#0F1115"
+        android:pathData="M0,0h320v180h-320z" />
+    <!-- Red rounded-square play badge (matches the app icon) -->
+    <path
+        android:fillColor="#FF3D3D"
+        android:pathData="M130,42h60a18,18 0,0 1,18 18v60a18,18 0,0 1,-18 18h-60a18,18 0,0 1,-18 -18v-60a18,18 0,0 1,18 -18z" />
+    <!-- White play triangle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M145,68L185,90L145,112Z" />
+</vector>

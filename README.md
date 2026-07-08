@@ -38,6 +38,8 @@ clips) never hard-fail, and the source (YouTube / X) is surfaced after Analyze.
   Music** folders (under a `YT-Plucker` album) via MediaStore, so they show up in Gallery/Music
   apps. Nothing is buffered in RAM — files stream to a private working dir then publish to the
   gallery.
+- **Android TV** — the same APK installs and launches on Android TV (leanback launcher + banner,
+  touchscreen not required), so you can pluck straight from the big screen with a remote.
 - **Stable signing** — every build is signed with one committed key (identity
   `xyrus.code.yt-plucker`), so updates install straight over the previous version. Package id:
   `xyrus.code.ytplucker`.
