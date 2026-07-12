@@ -1,10 +1,18 @@
 # YT-Plucker — Ad Reel
 
-A self-contained, autoplaying **~21-second ad** for YT-Plucker that you screen-record into a real
-MP4 for YouTube (16:9) and Shorts / Reels / TikTok (9:16). No build step, no internet, no
-dependencies — the three app screenshots are embedded directly in the file.
+Two ways to get the same ~21-second, 6-scene ad for YT-Plucker:
 
-**File:** [`ytplucker-ad.html`](ytplucker-ad.html)
+| | **Remotion (real MP4)** — recommended | **HTML reel** (this file) |
+|---|---|---|
+| What | Motion graphics built in code, rendered to an actual `.mp4` | Self-contained autoplaying webpage you screen-record |
+| Output | `remotion/out/ytplucker-ad-16x9.mp4` + `-9x16.mp4` | your screen recording |
+| Where | [`remotion/`](remotion/) — `npm install && npm run render` | [`ytplucker-ad.html`](ytplucker-ad.html) |
+
+**Rendered MP4s land here on this machine:**
+`C:\Users\Xyrus\Desktop\XyrusCode\Xyrus-YT-Plucker\docs\ad\remotion\out\`
+(1920×1080 and 1080×1920, 21s, 30fps, silent). See [remotion/README.md](remotion/README.md).
+
+The rest of this file covers the **HTML reel** — the no-toolchain option you record yourself.
 
 ---
 

@@ -1,0 +1,24 @@
+{
+  "name": "ytplucker-promo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion motion-graphics ad for YT-Plucker (renders to real MP4, 16:9 + 9:16)",
+  "scripts": {
+    "studio": "remotion studio",
+    "still": "remotion still",
+    "render:landscape": "remotion render Ad-Landscape out/ytplucker-ad-16x9.mp4",
+    "render:vertical": "remotion render Ad-Vertical out/ytplucker-ad-9x16.mp4",
+    "render": "npm run render:landscape && npm run render:vertical"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.488",
+    "@remotion/google-fonts": "4.0.488",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.488"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.6.3"
+  }
+}
