@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import xyrus.code.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.domain.model.normalizeForEngine
+import xyrus.code.ytplucker.domain.model.platformForVideoUrl
 import xyrus.code.ytplucker.service.DownloadService
 
 class BrowserViewModel(app: Application) : AndroidViewModel(app) {
@@ -20,12 +22,6 @@ class BrowserViewModel(app: Application) : AndroidViewModel(app) {
     private val _pendingUrl = MutableStateFlow<String?>(null)
     val pendingUrl: StateFlow<String?> = _pendingUrl.asStateFlow()
 
-    private val videoPatterns = listOf(
-        Regex("""(?:m\.)?youtube\.\w+/watch\?v=[\w-]+"""),
-        Regex("""youtu\.be/[\w-]+"""),
-        Regex("""(?:x|twitter)\.\w+/\w+/status/\d+"""),
-    )
-
     fun onUrlEntered(input: String) {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) return
@@ -37,7 +33,7 @@ class BrowserViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onPageNavigated(url: String) {
         _currentUrl.value = url
-        _isVideoPage.value = videoPatterns.any { it.containsMatchIn(url) }
+        _isVideoPage.value = platformForVideoUrl(url) != null
     }
 
     fun loadUrl(url: String) {
@@ -51,7 +47,9 @@ class BrowserViewModel(app: Application) : AndroidViewModel(app) {
     fun triggerDownload(url: String, quality: Quality) {
         val context = getApplication<Application>()
         val jobId = "job-${System.currentTimeMillis()}"
-        val intent = DownloadService.startIntent(context, jobId, url, quality, destDir = null)
+        val intent = DownloadService.startIntent(
+            context, jobId, normalizeForEngine(url), quality, destDir = null,
+        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)
         } else {
