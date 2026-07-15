@@ -30,16 +30,11 @@ data class VideoMeta(
     val source: String? = null,          // yt-dlp extractor key, e.g. "Youtube", "Twitter"
     val availableHeights: List<Int> = emptyList(),
 ) {
-    /** Human label for the source: "YouTube", "X (Twitter)", or the raw extractor name. */
+    /** Human label for the source: a known platform's name, or the raw extractor name. */
     val prettySource: String?
         get() {
-            val s = source?.lowercase() ?: return null
-            return when {
-                s.contains("youtube") -> "YouTube"
-                s.contains("twitter") || s == "x" -> "X (Twitter)"
-                s.isBlank() -> null
-                else -> source
-            }
+            val s = source?.takeIf { it.isNotBlank() } ?: return null
+            return platformForExtractorKey(s)?.name ?: s
         }
 }
 

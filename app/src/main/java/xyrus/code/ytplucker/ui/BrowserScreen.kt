@@ -6,6 +6,9 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,18 +55,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import xyrus.code.ytplucker.R
 import xyrus.code.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.domain.model.SUPPORTED_PLATFORMS
 import xyrus.code.ytplucker.ui.theme.Accent
 import xyrus.code.ytplucker.ui.theme.Bg
 import xyrus.code.ytplucker.ui.theme.BorderCol
 import xyrus.code.ytplucker.ui.theme.Panel
 import xyrus.code.ytplucker.ui.theme.TextDim
-
-private data class Platform(val name: String, val url: String, val color: Color)
-
-private val platforms = listOf(
-    Platform("YouTube", "https://m.youtube.com", Color(0xFFFF0000)),
-    Platform("X / Twitter", "https://x.com", Color(0xFF1DA1F2)),
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
@@ -125,24 +122,26 @@ fun BrowserScreen(
             }
             HorizontalDivider(color = BorderCol)
 
-            // Platform buttons — tap to jump straight to that site
+            // Platform buttons — tap to jump straight to that site. Scrolls rather than sharing
+            // the width evenly, so longer names aren't ellipsized as sites are added.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                platforms.forEach { p ->
+                SUPPORTED_PLATFORMS.forEach { p ->
+                    val color = Color(p.argb)
                     Button(
-                        onClick = { viewModel.loadUrl(p.url) },
-                        modifier = Modifier.weight(1f),
+                        onClick = { viewModel.loadUrl(p.homeUrl) },
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = p.color.copy(alpha = 0.2f)),
+                        colors = ButtonDefaults.buttonColors(containerColor = color.copy(alpha = 0.2f)),
                     ) {
                         Text(
                             p.name,
                             fontWeight = FontWeight.Bold,
-                            color = p.color,
+                            color = color,
                             modifier = Modifier.padding(vertical = 8.dp),
                         )
                     }
@@ -150,7 +149,7 @@ fun BrowserScreen(
             }
 
             // WebView area — a landing overlay covers the blank WebView until a site is opened,
-            // so launch is never an empty screen and the user can jump to YouTube / X.
+            // so launch is never an empty screen and the user can jump straight to a site.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -229,13 +228,16 @@ fun BrowserScreen(
     }
 }
 
-/** Empty-state shown over the WebView on launch: big cards to jump straight to YouTube / X. */
+/** Empty-state shown over the WebView on launch: big cards to jump straight to a site. */
 @Composable
 private fun BrowserLanding(onPick: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Bg)
+            // Scrolls so the cards stay reachable in landscape and on TV, where the
+            // column is far shorter than in portrait.
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -248,19 +250,20 @@ private fun BrowserLanding(onPick: (String) -> Unit) {
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
-        platforms.forEach { p ->
+        SUPPORTED_PLATFORMS.forEach { p ->
+            val color = Color(p.argb)
             Button(
-                onClick = { onPick(p.url) },
+                onClick = { onPick(p.homeUrl) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(66.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = p.color.copy(alpha = 0.18f)),
+                colors = ButtonDefaults.buttonColors(containerColor = color.copy(alpha = 0.18f)),
             ) {
                 Text(
                     "Open ${p.name}",
                     fontWeight = FontWeight.Bold,
-                    color = p.color,
+                    color = color,
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
