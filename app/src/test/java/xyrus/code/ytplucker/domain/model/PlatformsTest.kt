@@ -1,7 +1,9 @@
 package xyrus.code.ytplucker.domain.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PlatformsTest {
@@ -87,5 +89,44 @@ class PlatformsTest {
     fun `single-character keys never substring-match`() {
         assertNull(platformForExtractorKey("Xhamster"))
         assertNull(platformForExtractorKey("vimeo"))
+    }
+
+    @Test
+    fun `web schemes are recognised and others are not`() {
+        assertTrue(isWebUrl("https://www.tiktok.com/@u/video/1"))
+        assertTrue(isWebUrl("http://example.com"))
+        assertFalse(isWebUrl("snssdk1340://aweme/detail/123"))
+        assertFalse(isWebUrl("intent://scan/#Intent;scheme=zxing;end"))
+    }
+
+    /** The exact deep-link that dead-ended the WebView with ERR_UNKNOWN_URL_SCHEME. */
+    @Test
+    fun `tiktok app link yields the real web url`() {
+        val deepLink = "snssdk1340://aweme/detail/7634514435054308628?" +
+            "insert_feed=1&params_url=https%3A%2F%2Fwww.tiktok.com%2F%40user%2Fvideo%2F7634514435054308628"
+        assertEquals(
+            "https://www.tiktok.com/@user/video/7634514435054308628",
+            webFallbackFromAppLink(deepLink),
+        )
+    }
+
+    /** intent:// delimits its extras with semicolons, not & — and `;end` must not leak in. */
+    @Test
+    fun `intent links yield their browser fallback`() {
+        val intentLink = "intent://www.tiktok.com/@u/video/1#Intent;scheme=https;" +
+            "S.browser_fallback_url=https%3A%2F%2Fwww.tiktok.com%2F%40u%2Fvideo%2F1;end"
+        assertEquals("https://www.tiktok.com/@u/video/1", webFallbackFromAppLink(intentLink))
+    }
+
+    @Test
+    fun `app links without a fallback yield null`() {
+        assertNull(webFallbackFromAppLink("snssdk1340://aweme/detail/7634514435054308628"))
+        assertNull(webFallbackFromAppLink("https://www.tiktok.com/@u/video/1"))
+    }
+
+    /** A fallback pointing at another app scheme must not be handed back to the WebView. */
+    @Test
+    fun `non-web fallbacks are rejected`() {
+        assertNull(webFallbackFromAppLink("intent://x#Intent;S.browser_fallback_url=market%3A%2F%2Fdetails;end"))
     }
 }
