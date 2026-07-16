@@ -1,5 +1,7 @@
 package xyrus.code.ytplucker.domain.model
 
+import java.net.URLDecoder
+
 /**
  * A site the app knows about: its browser card, how to recognise one of its video pages,
  * and how yt-dlp names it. Single source of truth — the browser cards, the download FAB's
@@ -92,3 +94,32 @@ fun unsupportedContentReason(url: String): String? =
 
 /** Thrown when a URL is recognisably something the engine cannot download. */
 class UnsupportedContentException(message: String) : Exception(message)
+
+// --- In-app browser URL handling ------------------------------------------------------------
+
+/** True for schemes a WebView can actually load. Anything else needs intercepting. */
+fun isWebUrl(url: String): Boolean =
+    url.startsWith("http://", ignoreCase = true) || url.startsWith("https://", ignoreCase = true)
+
+// `;` belongs in both halves: intent:// packs its extras as `#Intent;a=1;b=2;end`, so the
+// parameter is semicolon-delimited on the left and semicolon-terminated on the right. Omitting
+// it both misses the match and swallows the trailing `;end` into the URL.
+private val APP_LINK_FALLBACK = Regex(
+    """[?&#;](?:params_url|S\.browser_fallback_url|browser_fallback_url)=([^&#;]+)""",
+    RegexOption.IGNORE_CASE,
+)
+
+/**
+ * The plain web URL hidden inside an app deep-link, or null if it carries none.
+ *
+ * Mobile sites try to bounce visitors into their native app with a custom scheme, which a
+ * WebView cannot load (ERR_UNKNOWN_URL_SCHEME). TikTok's looks like
+ * `snssdk1340://aweme/detail/<id>?...&params_url=https%3A%2F%2Fwww.tiktok.com%2F...`, and
+ * Android's generic `intent://` form uses `S.browser_fallback_url`. Both smuggle the real
+ * page along, so we can stay in the browser instead of dead-ending or ejecting the user.
+ */
+fun webFallbackFromAppLink(url: String): String? {
+    val encoded = APP_LINK_FALLBACK.find(url)?.groupValues?.get(1) ?: return null
+    val decoded = runCatching { URLDecoder.decode(encoded, "UTF-8") }.getOrNull() ?: return null
+    return decoded.takeIf { isWebUrl(it) }
+}
