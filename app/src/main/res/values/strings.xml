@@ -6,4 +6,8 @@
     <string name="action_cancel">Cancel</string>
     <string name="updating_engine">Updating downloader…</string>
     <string name="download_failed">Download failed</string>
+    <string name="exit_title">Close YT-Plucker?</string>
+    <string name="exit_message">There\'s no page to go back to. Leave the app?</string>
+    <string name="exit_confirm">Close</string>
+    <string name="exit_cancel">Stay</string>
 </resources>
