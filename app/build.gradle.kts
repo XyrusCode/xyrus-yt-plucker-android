@@ -13,13 +13,9 @@ android {
         applicationId = "xyrus.code.ytplucker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 9
-        versionName = "3.2.0"
+        versionCode = 11
+        versionName = "4.1.0"
 
-        // Sentry project: org "xyrus-code", project "yt-plucker". A client DSN is not a secret
-        // (it ships in every APK), so it's committed here so CI-built releases report crashes with
-        // no extra secret. It can still be overridden at build time via the `sentryDsn` Gradle
-        // property or the `SENTRY_DSN` env var. Empty DSN → Sentry init is skipped (see YtPluckerApp).
         val sentryDsn = (project.findProperty("sentryDsn") as String?)
             ?: System.getenv("SENTRY_DSN")
             ?: "https://c7912a9a54358f46a807910d06e3aa9c@o4505487881732096.ingest.us.sentry.io/4511751276462080"
@@ -117,4 +113,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.config)
     implementation(libs.sentry.android)
+
+    testImplementation(libs.junit)
 }

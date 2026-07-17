@@ -1,15 +1,17 @@
 # YT-Plucker (Android)
 
-Native Android port of the desktop **Xyrus' YT Plucker** app — *pluck videos from YouTube & X,
-straight to disk*. Built with **Kotlin + Jetpack Compose**, Clean Architecture (ViewModel +
+Native Android port of the desktop **Xyrus' YT Plucker** app — *pluck videos from YouTube, X &
+TikTok, straight to disk*. Built with **Kotlin + Jetpack Compose**, Clean Architecture (ViewModel +
 Coroutines/Flow), and a **foreground service** so downloads keep running at full speed when the app
 is minimized or the screen is off.
 
 Downloads are powered by **[youtubedl-android](https://github.com/yausername/youtubedl-android)**
-(bundled `yt-dlp` + `ffmpeg`), so it supports **YouTube and X (Twitter)** — plus ~1800 other sites,
-4K, playlists, and audio extraction — with the same engine and format logic as the desktop app.
-Height-capped quality selections carry a `/b` fallback so limited-resolution sources (like short X
-clips) never hard-fail, and the source (YouTube / X) is surfaced after Analyze.
+(bundled `yt-dlp` + `ffmpeg`), so it supports **YouTube, X (Twitter) and TikTok** — plus ~1800 other
+sites, 4K, playlists, and audio extraction — with the same engine and format logic as the desktop
+app. Height-capped quality selections carry a `/b` fallback so limited-resolution sources (like
+short X clips) never hard-fail, and the source is surfaced after Analyze. **TikTok videos download
+without the TikTok watermark** — yt-dlp ranks watermarked formats below clean ones, so the default
+selection already picks the clean stream.
 
 ## Screenshots
 
@@ -25,15 +27,15 @@ clips) never hard-fail, and the source (YouTube / X) is surfaced after Analyze.
   <em>Browse YouTube/X in-app and tap to download&nbsp;·&nbsp;Pick a quality&nbsp;·&nbsp;Track progress, saved straight to your gallery</em>
 </p>
 
-## Features (v3)
+## Features (v4)
 
-- **In-app browser** — open YouTube or X inside the app; a floating download button appears on a
-  video page so you can grab it without leaving the browser.
+- **In-app browser** — open YouTube, X or TikTok inside the app; a floating download button appears
+  on a video page so you can grab it without leaving the browser.
 - **Download tab** — paste/analyze/download with live progress; self-healing yt-dlp updates.
 - **History tab** — lists everything you've downloaded (read from the device's media library); tap
   a row to open it in your device's native player/viewer.
-- **Share target** — YT-Plucker appears in the YouTube / X share sheets. Sharing a video prefills
-  the URL and jumps to the Download tab, ready to go.
+- **Share target** — YT-Plucker appears in the YouTube / X / TikTok share sheets. Sharing a video
+  prefills the URL and jumps to the Download tab, ready to go.
 - **Saved by type into the gallery** — finished files land in the public **Movies / Pictures /
   Music** folders (under a `YT-Plucker` album) via MediaStore, so they show up in Gallery/Music
   apps. Nothing is buffered in RAM — files stream to a private working dir then publish to the
@@ -62,7 +64,15 @@ UI (Compose)  ──▶  DownloadViewModel  ──startForegroundService──�
 - **`DownloadRepositoryImpl`** is a Context-free singleton `StateFlow`, so a download stays
   observable across config changes / backgrounding.
 
-Package: `tech.acachi.ytplucker`. Output goes to the app's external `Movies/` dir as `Title [id].ext`.
+Package: `xyrus.code.ytplucker`. Output goes to the app's external `Movies/` dir as `Title [id].ext`.
+
+**Supported sites live in one place.** `domain/model/Platforms.kt` holds a single `SUPPORTED_PLATFORMS`
+registry — each entry carries the browser card (name, home URL, brand colour), the regexes that mark
+one of its pages as a downloadable video, and the yt-dlp extractor keys used to label it. Adding a
+site is one entry; the browser cards, the download FAB, and the Analyze source label all read from it.
+
+**Known limitation:** TikTok photo/slideshow posts can't be downloaded — they have no video stream
+and are unsupported by yt-dlp upstream. The app detects them and says so rather than failing opaquely.
 
 ## Build
 
@@ -76,12 +86,12 @@ adb install app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
 
 First launch unpacks the bundled Python/yt-dlp/ffmpeg payload (one-time, a few seconds).
 
-> **Dependency version note:** youtubedl-android is pinned to `0.14.0` in
-> `gradle/libs.versions.toml` **on purpose** — it is the newest tag that JitPack builds
-> successfully for this library (every version ≥ 0.15.0 currently errors on JitPack's build
-> infra). The wrapper is dated, but the app calls `updateYoutubeDL()` on first launch to pull a
-> current yt-dlp binary, so extraction against today's sites keeps working. Before bumping the pin,
-> confirm a green build exists at `https://jitpack.io/#yausername/youtubedl-android`.
+> **Dependency version note:** youtubedl-android is pinned to `0.18.1` in
+> `gradle/libs.versions.toml`, using the maintained JunkFood02 line on Maven Central (the same
+> library the Seal app ships). It bundles a modern Python (3.10+), which current yt-dlp requires.
+> The app also calls `updateYoutubeDL()` on first launch to pull a current yt-dlp binary, so
+> extraction against today's sites keeps working as extractors change — this self-update is the
+> main defence against site-side breakage, so don't pin yt-dlp itself.
 
 ## CI
 

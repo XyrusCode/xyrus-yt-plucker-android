@@ -23,6 +23,10 @@ import xyrus.code.ytplucker.data.MediaExporter
 import xyrus.code.ytplucker.domain.model.DownloadProgress
 import xyrus.code.ytplucker.domain.model.JobStatus
 import xyrus.code.ytplucker.domain.model.Quality
+import xyrus.code.ytplucker.domain.model.TIKTOK_PHOTO_MSG
+import xyrus.code.ytplucker.domain.model.UnsupportedContentException
+import xyrus.code.ytplucker.domain.model.normalizeForEngine
+import xyrus.code.ytplucker.domain.model.unsupportedContentReason
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -83,6 +87,11 @@ class DownloadService : Service() {
             // gallery afterwards. Keeps partials out of the user's Movies/Music while in flight.
             val workDir = File(cacheDir, "ytwork/$jobId")
             try {
+                // Reject content the engine provably can't handle before spending a run on it.
+                // Must be inside the coroutine: an early return from onStartCommand would skip
+                // the mandatory startForeground() and crash the service.
+                unsupportedContentReason(url)?.let { throw UnsupportedContentException(it) }
+                val engineUrl = normalizeForEngine(url)
                 workDir.mkdirs()
                 val onProgress: (Float, Long, String) -> Unit = { percent, etaSeconds, line ->
                     val speed = parseSpeedBytesPerSec(line)
@@ -97,7 +106,7 @@ class DownloadService : Service() {
                     updateNotification(jobId, last)
                 }
                 suspend fun runOnce() = repository.downloadManager.download(
-                    url = url, quality = quality, destDir = workDir.absolutePath, jobId = jobId,
+                    url = engineUrl, quality = quality, destDir = workDir.absolutePath, jobId = jobId,
                     onProgress = onProgress,
                 )
                 try {
@@ -115,12 +124,13 @@ class DownloadService : Service() {
                 repository.publish(last.copy(percent = 100f, status = JobStatus.COMPLETED))
             } catch (e: Exception) {
                 val cancelled = isCancellation(e)
-                repository.publish(
-                    last.copy(
-                        status = if (cancelled) JobStatus.CANCELLED else JobStatus.FAILED,
-                        error = if (cancelled) null else e.message,
-                    ),
+                // Reassign, don't just publish: `finally` hands `last` to onJobFinished, which
+                // decides whether to leave a failure notification behind.
+                last = last.copy(
+                    status = if (cancelled) JobStatus.CANCELLED else JobStatus.FAILED,
+                    error = if (cancelled) null else failureMessage(url, e),
                 )
+                repository.publish(last)
             } finally {
                 workDir.deleteRecursively()
                 onJobFinished(jobId, last)
@@ -145,6 +155,20 @@ class DownloadService : Service() {
         jobs[jobId]?.cancel()
     }
 
+    /**
+     * A short-link (vm./vt./t/) can hide a photo post, which only reveals itself once yt-dlp
+     * has resolved the redirect and rejected the URL. Translate that into the same plain-English
+     * reason the up-front guard gives, rather than leaking "Unsupported URL" at the user.
+     */
+    private fun failureMessage(url: String, e: Exception): String? =
+        if (url.contains("tiktok.com", ignoreCase = true) &&
+            e.message?.contains("Unsupported URL", ignoreCase = true) == true
+        ) {
+            TIKTOK_PHOTO_MSG
+        } else {
+            e.message
+        }
+
     private fun onJobFinished(jobId: String, last: DownloadProgress) {
         jobs.remove(jobId)
         NotificationManagerCompat.from(this).cancel(jobId.hashCode())
@@ -153,7 +177,33 @@ class DownloadService : Service() {
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
+        // Posted last, and under its own id: this job's progress notification may be the one
+        // backing the foreground state, and STOP_FOREGROUND_REMOVE above would take a
+        // same-id notification down with it.
+        if (last.status == JobStatus.FAILED) notifyFailed(jobId, last)
     }
+
+    /**
+     * A dismissible notification carrying the failure reason. Without this a job started from
+     * the browser FAB fails silently — the user is on the browser screen and never opens the
+     * Downloads list, where the reason would otherwise be the only trace.
+     */
+    private fun notifyFailed(jobId: String, p: DownloadProgress) {
+        if (!hasNotifPermission()) return
+        val reason = p.error ?: getString(R.string.download_failed)
+        val notif = NotificationCompat.Builder(this, YtPluckerApp.CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_download)
+            .setContentTitle(getString(R.string.download_failed))
+            .setContentText(reason)
+            .setStyle(NotificationCompat.BigTextStyle().bigText("${p.title}\n$reason"))
+            .setOngoing(false)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+        NotificationManagerCompat.from(this).notify(failureNotifId(jobId), notif)
+    }
+
+    private fun failureNotifId(jobId: String): Int = jobId.hashCode() + 1
 
     private fun dropIfIdle(startId: Int): Int {
         if (jobs.isEmpty()) stopSelf(startId)

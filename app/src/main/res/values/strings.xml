@@ -9,4 +9,9 @@
     <string name="experimental_features">Experimental features</string>
     <string name="enable_browser">Enable experimental browser</string>
     <string name="browser_warning">The built-in browser is a work in progress. Some sites may not render correctly, and video detection may not work on all pages. Use at your own discretion.</string>
+    <string name="download_failed">Download failed</string>
+    <string name="exit_title">Close YT-Plucker?</string>
+    <string name="exit_message">There\'s no page to go back to. Leave the app?</string>
+    <string name="exit_confirm">Close</string>
+    <string name="exit_cancel">Stay</string>
 </resources>
