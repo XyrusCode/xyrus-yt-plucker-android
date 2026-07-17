@@ -7,30 +7,50 @@ import android.os.Build
 import android.util.Log
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
+import io.sentry.Sentry
+import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import xyrus.code.ytplucker.data.AppPreferences
+import xyrus.code.ytplucker.data.FeatureFlags
 
 class YtPluckerApp : Application() {
 
+    lateinit var featureFlags: FeatureFlags
+        private set
+
+    lateinit var preferences: AppPreferences
+        private set
+
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
 
-        // youtubedl-android unpacks its Python + yt-dlp + ffmpeg payload on first init.
-        // Do it off the main thread so app startup stays snappy.
+        initSentry()
+        createNotificationChannel()
+        preferences = AppPreferences(this)
+        featureFlags = FeatureFlags(this)
+
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 YoutubeDL.init(this@YtPluckerApp)
                 FFmpeg.init(this@YtPluckerApp)
-                // The pinned wrapper (0.14.0) ships an old yt-dlp binary; refresh it so extraction
-                // works against current sites. Best-effort — a failure here (e.g. offline) just
-                // leaves the bundled binary in place.
                 runCatching { YoutubeDL.updateYoutubeDL(this@YtPluckerApp) }
                     .onFailure { Log.w(TAG, "yt-dlp self-update skipped", it) }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize yt-dlp/ffmpeg", e)
+                Sentry.captureException(e)
+            }
+        }
+    }
+
+    private fun initSentry() {
+        if (BuildConfig.SENTRY_DSN.isNotEmpty()) {
+            SentryAndroid.init(this) {
+                it.dsn = BuildConfig.SENTRY_DSN
+                it.release = BuildConfig.APPLICATION_ID + "@" + BuildConfig.VERSION_NAME
+                it.environment = if (BuildConfig.DEBUG) "debug" else "release"
             }
         }
     }
@@ -40,7 +60,6 @@ class YtPluckerApp : Application() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 getString(R.string.download_channel_name),
-                // LOW keeps the ongoing progress notification quiet (no sound/peek).
                 NotificationManager.IMPORTANCE_LOW,
             ).apply {
                 description = getString(R.string.download_channel_desc)
