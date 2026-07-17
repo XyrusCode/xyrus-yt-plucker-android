@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>browser_enabled</key>
+        <value>false</value>
+    </entry>
+    <entry>
+        <key>browser_opt_in_allowed</key>
+        <value>true</value>
+    </entry>
+</defaultsMap>

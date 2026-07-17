@@ -5,4 +5,8 @@
     <string name="download_channel_desc">Ongoing download progress</string>
     <string name="action_cancel">Cancel</string>
     <string name="updating_engine">Updating downloader…</string>
+    <string name="tab_settings">Settings</string>
+    <string name="experimental_features">Experimental features</string>
+    <string name="enable_browser">Enable experimental browser</string>
+    <string name="browser_warning">The built-in browser is a work in progress. Some sites may not render correctly, and video detection may not work on all pages. Use at your own discretion.</string>
 </resources>

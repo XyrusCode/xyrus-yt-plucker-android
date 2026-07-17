@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -14,6 +15,15 @@ android {
         targetSdk = 35
         versionCode = 9
         versionName = "3.2.0"
+
+        // Sentry project: org "xyrus-code", project "yt-plucker". A client DSN is not a secret
+        // (it ships in every APK), so it's committed here so CI-built releases report crashes with
+        // no extra secret. It can still be overridden at build time via the `sentryDsn` Gradle
+        // property or the `SENTRY_DSN` env var. Empty DSN → Sentry init is skipped (see YtPluckerApp).
+        val sentryDsn = (project.findProperty("sentryDsn") as String?)
+            ?: System.getenv("SENTRY_DSN")
+            ?: "https://c7912a9a54358f46a807910d06e3aa9c@o4505487881732096.ingest.us.sentry.io/4511751276462080"
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
     }
 
     // One shared, committed signing key (identity: xyrus.code.yt-plucker) used by every build so
@@ -63,6 +73,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // Don't let a non-critical lint rule fail the release build in CI.
@@ -102,4 +113,8 @@ dependencies {
 
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.config)
+    implementation(libs.sentry.android)
 }
