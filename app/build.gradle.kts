@@ -13,8 +13,8 @@ android {
         applicationId = "xyrus.code.ytplucker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 11
-        versionName = "4.1.0"
+        versionCode = 12
+        versionName = "4.2.0"
 
         val sentryDsn = (project.findProperty("sentryDsn") as String?)
             ?: System.getenv("SENTRY_DSN")
