@@ -16,6 +16,7 @@ youtubedl = "0.18.1"
 googleServices = "4.4.2"
 firebaseBom = "33.12.0"
 sentry = "7.22.1"
+junit = "4.13.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +42,7 @@ youtubedl-android-ffmpeg = { group = "io.github.junkfood02.youtubedl-android", n
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-config = { group = "com.google.firebase", name = "firebase-config" }
 sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentry" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
