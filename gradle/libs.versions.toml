@@ -13,6 +13,9 @@ okhttp = "4.12.0"
 # so current yt-dlp actually runs. The old JitPack build (com.github.yausername:0.14.0) shipped
 # Python 3.8, which today's yt-dlp refuses ("Only Python 3.10+ supported").
 youtubedl = "0.18.1"
+googleServices = "4.4.2"
+firebaseBom = "33.12.0"
+sentry = "7.22.1"
 junit = "4.13.2"
 
 [libraries]
@@ -36,9 +39,13 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 youtubedl-android-library = { group = "io.github.junkfood02.youtubedl-android", name = "library", version.ref = "youtubedl" }
 youtubedl-android-ffmpeg = { group = "io.github.junkfood02.youtubedl-android", name = "ffmpeg", version.ref = "youtubedl" }
 
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-config = { group = "com.google.firebase", name = "firebase-config" }
+sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentry" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }

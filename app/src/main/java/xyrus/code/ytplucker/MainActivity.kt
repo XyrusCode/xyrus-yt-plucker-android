@@ -18,7 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,29 +32,29 @@ import xyrus.code.ytplucker.ui.DownloadScreen
 import xyrus.code.ytplucker.ui.DownloadViewModel
 import xyrus.code.ytplucker.ui.HistoryScreen
 import xyrus.code.ytplucker.ui.HistoryViewModel
+import xyrus.code.ytplucker.ui.SettingsScreen
 import xyrus.code.ytplucker.ui.theme.YtPluckerTheme
 
 class MainActivity : ComponentActivity() {
 
-    // Holds a URL delivered via the share sheet (see the SEND intent-filter in the manifest).
     private val sharedUrl = mutableStateOf<String?>(null)
 
     private val requestPermissions =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { /* no-op */ }
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         sharedUrl.value = extractSharedUrl(intent)
+        val app = application as YtPluckerApp
         setContent {
             YtPluckerTheme {
                 LaunchedEffect(Unit) { requestNeededPermissions() }
-                AppRoot(sharedUrl)
+                AppRoot(sharedUrl, app)
             }
         }
     }
 
-    // A share while the app is already running arrives here.
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -67,13 +67,12 @@ class MainActivity : ComponentActivity() {
                 add(Manifest.permission.POST_NOTIFICATIONS)
             }
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                add(Manifest.permission.WRITE_EXTERNAL_STORAGE) // pre-scoped-storage saving
+                add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
         if (perms.isNotEmpty()) requestPermissions.launch(perms.toTypedArray())
     }
 
-    /** Pull a URL out of a SEND (share) or VIEW (deep link) intent. */
     private fun extractSharedUrl(intent: Intent?): String? {
         intent ?: return null
         return when (intent.action) {
@@ -84,7 +83,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Share text is often "caption https://…"; grab the first URL token.
     private fun firstUrl(text: String): String? =
         Regex("""https?://\S+""").find(text)?.value
 }
@@ -93,17 +91,38 @@ private enum class Tab(val label: String, val icon: Int) {
     BROWSER("Browser", R.drawable.ic_browser),
     DOWNLOAD("Download", R.drawable.ic_download),
     HISTORY("History", R.drawable.ic_history),
+    SETTINGS("Settings", R.drawable.ic_settings),
 }
 
 @Composable
-private fun AppRoot(sharedUrl: MutableState<String?>) {
-    // All three view models are activity-scoped so they survive tab switches.
+private fun AppRoot(
+    sharedUrl: androidx.compose.runtime.MutableState<String?>,
+    app: YtPluckerApp,
+) {
     val browserVm: BrowserViewModel = viewModel()
     val downloadVm: DownloadViewModel = viewModel()
     val historyVm: HistoryViewModel = viewModel()
-    var tab by remember { mutableStateOf(Tab.BROWSER) }
 
-    // A shared URL loads in the browser and switches to that tab.
+    val flagsState by app.featureFlags.state.collectAsState()
+    val browserOptIn by app.preferences.browserOptIn.collectAsState()
+
+    val browserVisible = flagsState.browserForceEnabled ||
+        (flagsState.browserOptInAllowed && browserOptIn)
+
+    var tab by remember {
+        mutableStateOf(
+            if (browserVisible) Tab.BROWSER else Tab.DOWNLOAD
+        )
+    }
+
+    val visibleTabs = remember(browserVisible) {
+        Tab.entries.filter { it != Tab.BROWSER || browserVisible }
+    }
+
+    if (!visibleTabs.contains(tab)) {
+        tab = Tab.DOWNLOAD
+    }
+
     LaunchedEffect(sharedUrl.value) {
         sharedUrl.value?.let {
             browserVm.loadUrl(it)
@@ -111,13 +130,13 @@ private fun AppRoot(sharedUrl: MutableState<String?>) {
             sharedUrl.value = null
         }
     }
-    // Refresh history each time that tab is shown.
+
     LaunchedEffect(tab) { if (tab == Tab.HISTORY) historyVm.refresh() }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
-                Tab.entries.forEach { t ->
+                visibleTabs.forEach { t ->
                     NavigationBarItem(
                         selected = tab == t,
                         onClick = { tab = t },
@@ -136,6 +155,10 @@ private fun AppRoot(sharedUrl: MutableState<String?>) {
                 )
                 Tab.DOWNLOAD -> DownloadScreen(viewModel = downloadVm)
                 Tab.HISTORY -> HistoryScreen(viewModel = historyVm)
+                Tab.SETTINGS -> SettingsScreen(
+                    featureFlags = app.featureFlags,
+                    preferences = app.preferences,
+                )
             }
         }
     }

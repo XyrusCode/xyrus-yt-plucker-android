@@ -1,0 +1,16 @@
+{
+  "parameters": {
+    "browser_enabled": {
+      "defaultValue": {
+        "value": "false"
+      },
+      "description": "Force the experimental browser tab on for ALL users. When true, the browser appears regardless of opt-in or kill switch."
+    },
+    "browser_opt_in_allowed": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Kill switch for the opt-in toggle. When false, the Settings toggle and browser tab are hidden from all users."
+    }
+  }
+}

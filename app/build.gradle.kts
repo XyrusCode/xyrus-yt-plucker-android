@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -14,6 +15,11 @@ android {
         targetSdk = 35
         versionCode = 11
         versionName = "4.1.0"
+
+        val sentryDsn = (project.findProperty("sentryDsn") as String?)
+            ?: System.getenv("SENTRY_DSN")
+            ?: "https://c7912a9a54358f46a807910d06e3aa9c@o4505487881732096.ingest.us.sentry.io/4511751276462080"
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
     }
 
     // One shared, committed signing key (identity: xyrus.code.yt-plucker) used by every build so
@@ -63,6 +69,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // Don't let a non-critical lint rule fail the release build in CI.
@@ -102,6 +109,10 @@ dependencies {
 
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.config)
+    implementation(libs.sentry.android)
 
     testImplementation(libs.junit)
 }
