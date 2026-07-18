@@ -40,6 +40,14 @@
         android:extractNativeLibs="true"
         android:theme="@style/Theme.YtPlucker">
 
+        <!-- Sentry is initialized manually in YtPluckerApp with the BuildConfig DSN.
+             Without this, SentryInitProvider auto-inits at process start and throws
+             "DSN is required" (crashing before Application.onCreate) since no
+             io.sentry.dsn meta-data exists in this manifest. -->
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
