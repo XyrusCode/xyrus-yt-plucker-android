@@ -9,15 +9,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import xyrus.code.ytplucker.BuildConfig
 import xyrus.code.ytplucker.R
 
-class FeatureFlags(context: Context) {
+class FeatureFlags private constructor(private val remoteConfig: FirebaseRemoteConfig?) {
 
     // Defensive: if Firebase's default app never initialized (e.g. a build produced
     // without google-services.json), getInstance() throws. Fall back to null so the
     // app degrades to defaults instead of crashing on launch.
-    private val remoteConfig: FirebaseRemoteConfig? = runCatching {
-        FirebaseApp.initializeApp(context) // no-op if already initialized
-        FirebaseRemoteConfig.getInstance()
-    }.getOrNull()
+    constructor(context: Context) : this(
+        runCatching {
+            FirebaseApp.initializeApp(context) // no-op if already initialized
+            FirebaseRemoteConfig.getInstance()
+        }.getOrNull(),
+    )
 
     private val _state = MutableStateFlow(
         // No Remote Config available → resolve immediately with defaults.
@@ -58,6 +60,10 @@ class FeatureFlags(context: Context) {
     )
 
     companion object {
+        // Last-resort fallback: an instance that never touches Firebase and
+        // immediately resolves to default flags (ready = true).
+        fun disabled(): FeatureFlags = FeatureFlags(remoteConfig = null)
+
         private const val KEY_BROWSER_ENABLED = "browser_enabled"
         private const val KEY_BROWSER_OPT_IN_ALLOWED = "browser_opt_in_allowed"
         private const val DEFAULT_BROWSER_ENABLED = false
