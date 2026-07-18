@@ -9,8 +9,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -104,6 +107,17 @@ private fun AppRoot(
     val historyVm: HistoryViewModel = viewModel()
 
     val flagsState by app.featureFlags.state.collectAsState()
+
+    // Hold on a spinner until feature flags resolve (Remote Config fetch, cancel,
+    // failure, or the no-Firebase fallback). Avoids flashing default UI and the
+    // Browser tab popping in/out once the real flags land.
+    if (!flagsState.ready) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     val browserOptIn by app.preferences.browserOptIn.collectAsState()
 
     val browserVisible = flagsState.browserForceEnabled ||
