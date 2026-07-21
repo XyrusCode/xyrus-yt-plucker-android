@@ -50,11 +50,17 @@ fun isStaleEngineError(message: String?): Boolean {
         "precondition check failed",
         "unable to extract",
         "http error 400",
+        "http error 403",
         "confirm you are on the latest version",
         "nsig extraction failed",
         "unable to download api page",
         "sign in to confirm",
         "please report this issue",
+        "requested format is not available",
+        "no video formats found",
+        "format not found",
+        "incomplete data received",
+        "unable to download video",
     ).any { m.contains(it) }
 }
 
