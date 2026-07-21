@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.sentry.android.gradle)
 }
 
 android {
@@ -13,8 +14,8 @@ android {
         applicationId = "xyrus.code.ytplucker"
         minSdk = 24
         targetSdk = 35
-        versionCode = 15
-        versionName = "4.3.0"
+        versionCode = 16
+        versionName = "4.4.0"
 
         val sentryDsn = (project.findProperty("sentryDsn") as String?)
             ?: System.getenv("SENTRY_DSN")
