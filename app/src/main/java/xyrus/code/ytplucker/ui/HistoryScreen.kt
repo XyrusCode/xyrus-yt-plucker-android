@@ -6,17 +6,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -28,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import xyrus.code.ytplucker.R
+import xyrus.code.ytplucker.data.HistoryStore
 import xyrus.code.ytplucker.domain.model.DownloadedFile
 import java.util.Locale
 
@@ -37,12 +45,23 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
     val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-        Text(
-            "Downloads",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 12.dp),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Downloads",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+            if (items.isNotEmpty()) {
+                TextButton(onClick = { viewModel.dismissAll() }) {
+                    Text("Clear all")
+                }
+            }
+        }
+
         if (items.isEmpty()) {
             Text(
                 "Nothing here yet. Your downloaded files will appear here — tap one to open it in " +
@@ -51,34 +70,38 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
             )
             return@Column
         }
+
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(items, key = { it.uri.toString() }) { file ->
-                HistoryRow(file) {
-                    runCatching { context.startActivity(xyrus.code.ytplucker.data.HistoryStore.openIntent(file)) }
-                        .onFailure {
-                            val msg = if (it is ActivityNotFoundException) {
-                                "No app can open this file type"
-                            } else {
-                                "Couldn't open file"
+                HistoryRow(
+                    file = file,
+                    onClick = {
+                        runCatching { context.startActivity(HistoryStore.openIntent(file)) }
+                            .onFailure {
+                                val msg = if (it is ActivityNotFoundException) {
+                                    "No app can open this file type"
+                                } else {
+                                    "Couldn't open file"
+                                }
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        }
-                }
+                    },
+                    onDismiss = { viewModel.dismiss(file) },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun HistoryRow(file: DownloadedFile, onClick: () -> Unit) {
+private fun HistoryRow(file: DownloadedFile, onClick: () -> Unit, onDismiss: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Icon(
                 painter = painterResource(iconFor(file)),
@@ -86,12 +109,20 @@ private fun HistoryRow(file: DownloadedFile, onClick: () -> Unit) {
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp),
             )
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f).clickable { onClick() }) {
                 Text(file.name, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
                 Text(
                     formatSize(file.sizeBytes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remove from history",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -105,7 +136,7 @@ private fun iconFor(file: DownloadedFile): Int = when {
 }
 
 private fun formatSize(bytes: Long): String {
-    if (bytes <= 0) return "—"
+    if (bytes <= 0) return "\u2014"
     val mb = bytes / (1024.0 * 1024.0)
     return if (mb >= 1024) String.format(Locale.US, "%.2f GB", mb / 1024)
     else String.format(Locale.US, "%.1f MB", mb)
