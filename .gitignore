@@ -19,3 +19,6 @@ sentry-wizard.exe
 
 # Build logs
 build-log.txt
+
+# AI tooling config
+.claude/
