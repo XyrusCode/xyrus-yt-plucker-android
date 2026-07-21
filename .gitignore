@@ -13,3 +13,11 @@ build/
 
 # Firebase config — injected in CI, kept locally for dev builds
 app/google-services.json
+# Sentry
+sentry-wizard.exe
+
+# Build logs
+build-log.txt
+
+# AI tooling config
+.claude/
