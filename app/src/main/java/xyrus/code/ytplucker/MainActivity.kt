@@ -182,7 +182,7 @@ private fun AppRoot(
 
     if (updateInfo != null && !downloading) {
         AlertDialog(
-            onDismissRequest = { app.pendingUpdate.value = null },
+            onDismissRequest = { app.dismissUpdate() },
             title = { Text(stringResource(R.string.update_available)) },
             text = {
                 Text(stringResource(R.string.update_message,
@@ -197,12 +197,12 @@ private fun AppRoot(
                             app.updateChecker.installApk(file)
                         }
                         downloading = false
-                        app.pendingUpdate.value = null
+                        app.dismissUpdate()
                     }
                 }) { Text(stringResource(R.string.update_now)) }
             },
             dismissButton = {
-                TextButton(onClick = { app.pendingUpdate.value = null }) {
+                TextButton(onClick = { app.dismissUpdate() }) {
                     Text(stringResource(R.string.update_later))
                 }
             },

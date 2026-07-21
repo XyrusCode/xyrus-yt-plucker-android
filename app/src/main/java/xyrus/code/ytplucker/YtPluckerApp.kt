@@ -36,6 +36,8 @@ class YtPluckerApp : Application() {
     private val _pendingUpdate = MutableStateFlow<UpdateInfo?>(null)
     val pendingUpdate: StateFlow<UpdateInfo?> = _pendingUpdate.asStateFlow()
 
+    fun dismissUpdate() { _pendingUpdate.value = null }
+
     override fun onCreate() {
         super.onCreate()
 
