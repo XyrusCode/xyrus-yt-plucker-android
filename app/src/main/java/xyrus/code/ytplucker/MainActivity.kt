@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,24 +14,29 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import xyrus.code.ytplucker.domain.model.Quality
 import xyrus.code.ytplucker.domain.model.normalizeForEngine
 import xyrus.code.ytplucker.service.DownloadService
@@ -169,6 +175,39 @@ private fun AppRoot(
     }
 
     LaunchedEffect(tab) { if (tab == Tab.HISTORY) historyVm.refresh() }
+
+    val updateInfo by app.pendingUpdate.collectAsState()
+    val scope = rememberCoroutineScope()
+    var downloading by remember { mutableStateOf(false) }
+
+    if (updateInfo != null && !downloading) {
+        AlertDialog(
+            onDismissRequest = { app.pendingUpdate.value = null },
+            title = { Text(stringResource(R.string.update_available)) },
+            text = {
+                Text(stringResource(R.string.update_message,
+                    updateInfo!!.latestVersion, BuildConfig.VERSION_NAME))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    downloading = true
+                    scope.launch {
+                        val file = app.updateChecker.downloadApk(updateInfo!!)
+                        if (file != null) {
+                            app.updateChecker.installApk(file)
+                        }
+                        downloading = false
+                        app.pendingUpdate.value = null
+                    }
+                }) { Text(stringResource(R.string.update_now)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { app.pendingUpdate.value = null }) {
+                    Text(stringResource(R.string.update_later))
+                }
+            },
+        )
+    }
 
     Scaffold(
         bottomBar = {
