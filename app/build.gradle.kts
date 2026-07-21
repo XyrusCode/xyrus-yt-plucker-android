@@ -6,6 +6,12 @@ plugins {
     alias(libs.plugins.sentry.android.gradle)
 }
 
+sentry {
+    autoInstallation {
+        enabled = false
+    }
+}
+
 android {
     namespace = "xyrus.code.ytplucker"
     compileSdk = 35
