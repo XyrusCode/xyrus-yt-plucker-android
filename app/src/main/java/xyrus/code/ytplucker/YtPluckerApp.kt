@@ -30,7 +30,14 @@ class YtPluckerApp : Application() {
         initSentry()
         createNotificationChannel()
         preferences = AppPreferences(this)
-        featureFlags = FeatureFlags(this)
+        // FeatureFlags guards Firebase internally, but flag setup must never take
+        // down launch — fall back to a no-op instance with default flags.
+        featureFlags = try {
+            FeatureFlags(this)
+        } catch (e: Exception) {
+            Sentry.captureException(e)
+            FeatureFlags.disabled()
+        }
 
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {

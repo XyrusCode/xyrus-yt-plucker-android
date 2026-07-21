@@ -1,6 +1,7 @@
 package xyrus.code.ytplucker.ui
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,20 @@ class HistoryViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val list = withContext(Dispatchers.IO) { HistoryStore.list(getApplication()) }
             _items.value = list
+        }
+    }
+
+    fun dismiss(file: DownloadedFile) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { HistoryStore.dismiss(getApplication(), file.uri) }
+            _items.value = _items.value - file
+        }
+    }
+
+    fun dismissAll() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { HistoryStore.dismissAll(getApplication()) }
+            _items.value = emptyList()
         }
     }
 }
