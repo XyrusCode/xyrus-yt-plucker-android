@@ -16,6 +16,7 @@ youtubedl = "0.18.1"
 googleServices = "4.4.2"
 firebaseBom = "33.12.0"
 sentry = "7.22.1"
+sentryGradlePlugin = "4.15.0"
 junit = "4.13.2"
 
 [libraries]
@@ -49,3 +50,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+sentry-android-gradle = { id = "io.sentry.android.gradle", version.ref = "sentryGradlePlugin" }
