@@ -59,8 +59,11 @@ class DownloadManager {
             addOption("--no-playlist")
             addOption("--no-mtime")
             addOption("--newline")
+            addOption("--no-config")
             // Numeric options passed as strings for API stability across wrapper versions.
             addOption("--retries", "10")
+            addOption("--extractor-retries", "3")
+            addOption("--file-access-retries", "3")
             // Bandwidth: parallel fragment fetch + generous socket/chunk sizing.
             addOption("--concurrent-fragments", "4")
             addOption("--buffer-size", "16K")
