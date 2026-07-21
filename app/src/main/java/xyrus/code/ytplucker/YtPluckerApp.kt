@@ -13,8 +13,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import xyrus.code.ytplucker.data.AppPreferences
 import xyrus.code.ytplucker.data.FeatureFlags
+import xyrus.code.ytplucker.data.UpdateChecker
+import xyrus.code.ytplucker.data.UpdateInfo
 
 class YtPluckerApp : Application() {
 
@@ -24,12 +30,20 @@ class YtPluckerApp : Application() {
     lateinit var preferences: AppPreferences
         private set
 
+    lateinit var updateChecker: UpdateChecker
+        private set
+
+    private val _pendingUpdate = MutableStateFlow<UpdateInfo?>(null)
+    val pendingUpdate: StateFlow<UpdateInfo?> = _pendingUpdate.asStateFlow()
+
     override fun onCreate() {
         super.onCreate()
 
         initSentry()
         createNotificationChannel()
         preferences = AppPreferences(this)
+
+        updateChecker = UpdateChecker(this, BuildConfig.VERSION_NAME)
         // FeatureFlags guards Firebase internally, but flag setup must never take
         // down launch — fall back to a no-op instance with default flags.
         featureFlags = try {
@@ -48,6 +62,13 @@ class YtPluckerApp : Application() {
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize yt-dlp/ffmpeg", e)
                 Sentry.captureException(e)
+            }
+
+            val update = runCatching {
+                updateChecker.checkForUpdate()
+            }.onFailure { Log.w(TAG, "Update check failed", it) }.getOrNull()
+            if (update != null) {
+                _pendingUpdate.value = update
             }
         }
     }
