@@ -87,13 +87,13 @@ class DownloadService : Service() {
             // Download into a private working dir; publish the finished file to the public
             // gallery afterwards. Keeps partials out of the user's Movies/Music while in flight.
             val workDir = File(cacheDir, "ytwork/$jobId")
+            val cookiesPath = resolveCookies(url, jobId)
             try {
                 // Reject content the engine provably can't handle before spending a run on it.
                 // Must be inside the coroutine: an early return from onStartCommand would skip
                 // the mandatory startForeground() and crash the service.
                 unsupportedContentReason(url)?.let { throw UnsupportedContentException(it) }
                 val engineUrl = normalizeForEngine(url)
-                val cookiesPath = resolveCookies(url, jobId)
                 workDir.mkdirs()
                 val onProgress: (Float, Long, String) -> Unit = { percent, etaSeconds, line ->
                     val speed = parseSpeedBytesPerSec(line)
