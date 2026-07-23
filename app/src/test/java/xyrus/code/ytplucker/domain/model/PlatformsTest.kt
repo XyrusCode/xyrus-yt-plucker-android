@@ -66,6 +66,40 @@ class PlatformsTest {
     }
 
     @Test
+    fun `tiktok video query params are stripped from normalized url`() {
+        assertEquals(
+            "https://www.tiktok.com/@user/video/7123456789",
+            normalizeForEngine("https://www.tiktok.com/@user/video/7123456789?is_copy_url=1&sender_device=pc"),
+        )
+    }
+
+    @Test
+    fun `tiktok host and query params are both normalised`() {
+        assertEquals(
+            "https://www.tiktok.com/@user/video/7123456789",
+            normalizeForEngine("https://m.tiktok.com/@user/video/7123456789?is_copy_url=1&_r=1"),
+        )
+    }
+
+    @Test
+    fun `tiktok short links keep query params`() {
+        val vm = "https://vm.tiktok.com/ZM123abc?foo=bar"
+        assertEquals(vm, normalizeForEngine(vm))
+    }
+
+    @Test
+    fun `tiktok url without query params is unchanged by stripping`() {
+        val clean = "https://www.tiktok.com/@user/video/7123456789"
+        assertEquals(clean, normalizeForEngine(clean))
+    }
+
+    @Test
+    fun `non-tiktok urls are not affected by param stripping`() {
+        val yt = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        assertEquals(yt, normalizeForEngine(yt))
+    }
+
+    @Test
     fun `photo posts report a reason and videos do not`() {
         assertEquals(
             TIKTOK_PHOTO_MSG,

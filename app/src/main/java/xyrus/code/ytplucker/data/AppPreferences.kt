@@ -17,8 +17,39 @@ class AppPreferences(context: Context) {
         _browserOptIn.value = enabled
     }
 
+    // -----------------------------------------------------------------------------------
+    // Cookie storage per platform
+    // -----------------------------------------------------------------------------------
+
+    private val _loggedInPlatforms = MutableStateFlow(
+        SUPPORTED_PLATFORM_KEYS.associateWith { key ->
+            prefs.getString(cookiePrefKey(key), null) != null
+        }
+    )
+    val loggedInPlatforms: StateFlow<Map<String, Boolean>> = _loggedInPlatforms.asStateFlow()
+
+    fun getCookies(platformKey: String): String? =
+        prefs.getString(cookiePrefKey(platformKey), null)
+
+    fun setCookies(platformKey: String, cookies: String) {
+        prefs.edit().putString(cookiePrefKey(platformKey), cookies).apply()
+        _loggedInPlatforms.value = _loggedInPlatforms.value + (platformKey to true)
+    }
+
+    fun clearCookies(platformKey: String) {
+        prefs.edit().remove(cookiePrefKey(platformKey)).apply()
+        _loggedInPlatforms.value = _loggedInPlatforms.value + (platformKey to false)
+    }
+
+    fun isLoggedIn(platformKey: String): Boolean =
+        prefs.getString(cookiePrefKey(platformKey), null) != null
+
+    private fun cookiePrefKey(platformKey: String): String = "cookies_$platformKey"
+
     companion object {
         private const val PREFS_NAME = "app_prefs"
         private const val KEY_BROWSER_OPT_IN = "browser_opt_in"
+
+        val SUPPORTED_PLATFORM_KEYS = listOf("youtube", "twitter", "tiktok")
     }
 }

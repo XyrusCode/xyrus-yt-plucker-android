@@ -51,6 +51,7 @@ class DownloadManager {
         quality: Quality,
         destDir: String,
         jobId: String,
+        cookiesPath: String? = null,
         onProgress: (Float, Long, String) -> Unit,
     ) = withContext(Dispatchers.IO) {
         val request = YoutubeDLRequest(url).apply {
@@ -68,6 +69,9 @@ class DownloadManager {
             addOption("--concurrent-fragments", "4")
             addOption("--buffer-size", "16K")
             addOption("--http-chunk-size", "10M")
+            if (cookiesPath != null) {
+                addOption("--cookies", cookiesPath)
+            }
             applyFormat(quality)
         }
         // ffmpeg (from the youtubedl-android ffmpeg module) is auto-discovered for merging.

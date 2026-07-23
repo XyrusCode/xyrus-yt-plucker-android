@@ -18,6 +18,12 @@ data class SitePlatform(
     val videoPatterns: List<Regex>,
     /** Lowercase fragments matched against yt-dlp's extractor key (e.g. "Youtube", "Twitter"). */
     val extractorKeys: List<String>,
+    /** Key used for cookie storage in preferences — derived from [extractorKeys]. */
+    val cookieKey: String = extractorKeys.first(),
+    /** The URL to load in the login WebView. */
+    val loginUrl: String = "",
+    /** The domain URL to pass to CookieManager.getCookie() for cookie extraction. */
+    val cookieDomain: String = "",
 )
 
 val SUPPORTED_PLATFORMS: List<SitePlatform> = listOf(
@@ -30,6 +36,8 @@ val SUPPORTED_PLATFORMS: List<SitePlatform> = listOf(
             Regex("""youtu\.be/[\w-]+"""),
         ),
         extractorKeys = listOf("youtube"),
+        loginUrl = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https://www.youtube.com",
+        cookieDomain = "https://www.youtube.com",
     ),
     SitePlatform(
         name = "X / Twitter",
@@ -37,6 +45,8 @@ val SUPPORTED_PLATFORMS: List<SitePlatform> = listOf(
         argb = 0xFF1DA1F2,
         videoPatterns = listOf(Regex("""(?:x|twitter)\.\w+/\w+/status/\d+""")),
         extractorKeys = listOf("twitter", "x"),
+        loginUrl = "https://x.com/login",
+        cookieDomain = "https://x.com",
     ),
     SitePlatform(
         name = "TikTok",
@@ -50,8 +60,14 @@ val SUPPORTED_PLATFORMS: List<SitePlatform> = listOf(
             Regex("""tiktok\.com/t/\w+"""),
         ),
         extractorKeys = listOf("tiktok"),
+        loginUrl = "https://www.tiktok.com/login",
+        cookieDomain = "https://www.tiktok.com",
     ),
 )
+
+/** The platform referenced by a cookie key, or null if the key doesn't match any known platform. */
+fun platformForCookieKey(key: String): SitePlatform? =
+    SUPPORTED_PLATFORMS.firstOrNull { it.cookieKey == key }
 
 /** The platform whose video-page pattern matches [url], or null if this isn't a known video page. */
 fun platformForVideoUrl(url: String): SitePlatform? =
@@ -74,6 +90,17 @@ private val TIKTOK_HOST = Regex("""^(https?://)(?:m\.|www\.)?tiktok\.com/""", Re
 
 private val TIKTOK_PHOTO = Regex("""tiktok\.com/@[\w.-]+/photo/\d+""", RegexOption.IGNORE_CASE)
 
+/**
+ * TikTok video URLs often carry tracking / share-sheet query parameters (e.g.
+ * `?is_copy_url=1&sender_device=pc`) that confuse yt-dlp's extractor and can trigger
+ * an impersonator / sign-in warning. Stripping all query params from the canonical
+ * /@user/video/<id> path gives yt-dlp a clean target.
+ */
+private val TIKTOK_VIDEO_QUERY = Regex(
+    """^(https?://[\w.]*tiktok\.com/@[\w.-]+/video/\d+)\?.*$""",
+    RegexOption.IGNORE_CASE,
+)
+
 const val TIKTOK_PHOTO_MSG =
     "TikTok photo/slideshow posts aren't supported — only videos can be downloaded."
 
@@ -81,9 +108,14 @@ const val TIKTOK_PHOTO_MSG =
  * Canonicalise a URL for yt-dlp. TikTok's extractor requires a literal `www.` on
  * /@user/video/<id>, but the in-app WebView can land on `m.tiktok.com` or the bare domain.
  * Short links (vm./vt./t/) are left alone — their host is already what the extractor wants.
+ *
+ * Also strips all query parameters from TikTok /@user/video/<id> URLs, since tracking
+ * params confuse yt-dlp's extractor (impersonator / sign-in warnings).
  */
-fun normalizeForEngine(url: String): String =
-    TIKTOK_HOST.replace(url) { "${it.groupValues[1]}www.tiktok.com/" }
+fun normalizeForEngine(url: String): String {
+    val normalized = TIKTOK_HOST.replace(url) { "${it.groupValues[1]}www.tiktok.com/" }
+    return TIKTOK_VIDEO_QUERY.replace(normalized) { it.groupValues[1] }
+}
 
 /**
  * A user-facing reason this URL can't be downloaded, or null if it looks fine. TikTok
